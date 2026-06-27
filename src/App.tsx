@@ -36,6 +36,33 @@ const AppContent: React.FC = () => {
   // Run real-time browser push notifications checking daemon
   usePushNotifications(tasks);
 
+  // Session clearing check for Demo Mode (new browser session starts fresh)
+  React.useEffect(() => {
+    const sessionActive = sessionStorage.getItem("rapidfocus_session_active");
+    if (!sessionActive) {
+      localStorage.removeItem("demo_tasks");
+      localStorage.removeItem("demo_goals");
+      localStorage.removeItem("demo_habits");
+      sessionStorage.setItem("rapidfocus_session_active", "true");
+    }
+  }, []);
+
+  // Demo Mode refresh/close warning alert notice
+  React.useEffect(() => {
+    if (isDemoMode) {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        const msg = "Demo data is temporary and will be cleared when you close the browser. Sign in with Google to save your data! 🔒";
+        e.preventDefault();
+        e.returnValue = msg;
+        return msg;
+      };
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      };
+    }
+  }, [isDemoMode]);
+
   // Listen for custom event to open the AI Coach Chat panel
   React.useEffect(() => {
     const handleOpenChat = () => {
@@ -409,10 +436,10 @@ const AppContent: React.FC = () => {
             {activeTab === "dashboard" && (
               <motion.div
                 key="dashboard"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <TaskDashboard />
               </motion.div>
@@ -421,10 +448,10 @@ const AppContent: React.FC = () => {
             {activeTab === "goals" && (
               <motion.div
                 key="goals"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="max-w-5xl mx-auto py-2"
               >
                 <GoalsTab />
@@ -434,10 +461,10 @@ const AppContent: React.FC = () => {
             {activeTab === "stats" && (
               <motion.div
                 key="stats"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className="max-w-5xl mx-auto py-2"
               >
                 <StatsTab />

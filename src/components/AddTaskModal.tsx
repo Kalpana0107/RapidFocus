@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { Mic, MicOff, X, Sparkles, CheckCircle2 } from "lucide-react";
 import { UserRole, Task } from "../types";
 
@@ -206,8 +207,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0F1E]/85 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-[#0D1425] border border-white/10 rounded-2xl glow-shadow-lg overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0F1E]/85 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 350 }}
+        className="relative w-full max-w-lg bg-[#0D1425] border border-white/10 rounded-2xl glow-shadow-lg overflow-hidden flex flex-col"
+      >
         {/* Neon accent top strip */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D4FF] via-cyan-400 to-[#0DFFD4]" />
         
@@ -383,7 +390,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

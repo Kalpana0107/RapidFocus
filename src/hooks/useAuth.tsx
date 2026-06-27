@@ -41,21 +41,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set initial state from localStorage if it's demo
     if (isLocalDemo) {
       const mockUser = {
-        uid: "demo-sandbox-uid",
-        email: "sandbox-user@rapidfocus.io",
-        displayName: "Demo User",
-        emailVerified: true,
-        isAnonymous: false,
-        metadata: {},
-        providerData: []
+        uid: 'demo-user',
+        displayName: 'Demo User',
+        email: 'demo@rapidfocus.app',
+        photoURL: null,
+        isDemo: true,
       } as any;
       setUser(mockUser);
       const localProfile = localStorage.getItem("rapidfocus_demo_profile") 
         ? JSON.parse(localStorage.getItem("rapidfocus_demo_profile")!) 
         : {
-            uid: "demo-sandbox-uid",
+            uid: "demo-user",
             name: "Demo User",
-            email: "sandbox-user@rapidfocus.io",
+            email: "demo@rapidfocus.app",
             role: "Professional",
             createdAt: new Date().toISOString()
           };
@@ -122,88 +120,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithDemo = async () => {
-    const demoEmail = "sandbox-user@rapidfocus.io";
-    const demoPassword = "DemoPassword123!";
-    
-    const useLocalFallback = () => {
-      console.warn("Using pure local sandbox mode directly.");
-      const mockUser = {
-        uid: "demo-sandbox-uid",
-        email: "sandbox-user@rapidfocus.io",
-        displayName: "Demo User",
-        emailVerified: true,
-        isAnonymous: false,
-        metadata: {},
-        providerData: []
-      } as any;
-      
-      setUser(mockUser);
-      const localProfile: UserProfile = {
-        uid: "demo-sandbox-uid",
-        name: "Demo User",
-        email: "sandbox-user@rapidfocus.io",
-        role: "Professional",
-        createdAt: new Date().toISOString()
-      };
-      setProfile(localProfile);
-      setIsDemoMode(true);
-      localStorage.setItem("rapidfocus_is_demo", "true");
-      localStorage.setItem("rapidfocus_demo_profile", JSON.stringify(localProfile));
+    const localProfile: UserProfile = {
+      uid: "demo-user",
+      name: "Demo User",
+      email: "demo@rapidfocus.app",
+      role: "Professional",
+      createdAt: new Date().toISOString()
     };
-
-    try {
-      let credential;
-      try {
-        credential = await signInWithEmailAndPassword(auth, demoEmail, demoPassword);
-      } catch (loginErr: any) {
-        if (loginErr.code === "auth/user-not-found" || loginErr.code === "auth/invalid-credential") {
-          credential = await createUserWithEmailAndPassword(auth, demoEmail, demoPassword);
-        } else {
-          throw loginErr;
-        }
-      }
-
-      const firebaseUser = credential.user;
-      setUser(firebaseUser);
-      const path = `users/${firebaseUser.uid}`;
-      let profileDoc;
-      try {
-        profileDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, path);
-      }
-
-      if (profileDoc && profileDoc.exists()) {
-        setProfile(profileDoc.data() as UserProfile);
-      } else {
-        // Create pre-filled sandbox profile if totally new
-        const newProfile: UserProfile = {
-          uid: firebaseUser.uid,
-          name: "Demo User",
-          email: firebaseUser.email || demoEmail,
-          role: "Professional",
-          createdAt: new Date().toISOString()
-        };
-        try {
-          await setDoc(doc(db, "users", firebaseUser.uid), newProfile);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, path);
-        }
-        setProfile(newProfile);
-      }
-      setIsDemoMode(false);
-      localStorage.removeItem("rapidfocus_is_demo");
-    } catch (error: any) {
-      console.warn("Firebase Auth demo login failed/disabled, activating local-only demo mode:", error);
-      useLocalFallback();
-    }
+    setUser({
+      uid: 'demo-user',
+      displayName: 'Demo User',
+      email: 'demo@rapidfocus.app',
+      photoURL: null,
+      isDemo: true,
+    } as any);
+    setProfile(localProfile);
+    setIsDemoMode(true);
+    localStorage.setItem("rapidfocus_is_demo", "true");
+    localStorage.setItem("rapidfocus_demo_profile", JSON.stringify(localProfile));
   };
 
   const signOutUser = async () => {
     localStorage.removeItem("rapidfocus_is_demo");
     localStorage.removeItem("rapidfocus_demo_profile");
-    localStorage.removeItem("rapidfocus_demo_tasks");
-    localStorage.removeItem("rapidfocus_demo_goals");
+    localStorage.removeItem("demo_tasks");
+    localStorage.removeItem("demo_goals");
+    localStorage.removeItem("demo_habits");
     setIsDemoMode(false);
     await signOut(auth);
     setUser(null);

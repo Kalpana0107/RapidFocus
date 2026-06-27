@@ -24,7 +24,7 @@ import {
 import { Task } from "../types";
 
 export const TaskDashboard: React.FC = () => {
-  const { user, profile, isDemoMode } = useAuth();
+  const { user, profile, isDemoMode, signOutUser } = useAuth();
   const { tasks, loading: tasksLoading, addTask, toggleTaskCompletion, deleteTask, updateTask, prioritizeTaskWithAI } = useTasks();
   
   // State elements
@@ -81,7 +81,7 @@ export const TaskDashboard: React.FC = () => {
 
   // Fetch Daily Briefing with caching & rate-limiting on load
   useEffect(() => {
-    if (tasksLoading || !profile) return;
+    if (tasksLoading || !profile || briefing) return;
 
     const fetchBriefing = async () => {
       const currentHash = getTasksStateHash(tasks);
@@ -189,13 +189,18 @@ export const TaskDashboard: React.FC = () => {
 
   // Calibrate all pending tasks together using Gemini
   const handleCalibrateAll = async () => {
-    const pendingTasks = tasks.filter((t) => !t.completed);
-    if (pendingTasks.length === 0) return;
+    const pendingTasks = tasks.filter((t) => !t.completed && t.aiPriorityScore === undefined);
+    // If all are already calibrated, calibrate all pending up to 5 tasks
+    const tasksToCalibrate = pendingTasks.length > 0 
+      ? pendingTasks.slice(0, 5) 
+      : tasks.filter((t) => !t.completed).slice(0, 5);
+    
+    if (tasksToCalibrate.length === 0) return;
     
     setIsCalibratingAll(true);
     try {
-      // Prioritize concurrently
-      const promises = pendingTasks.map((task) =>
+      // Prioritize concurrently (up to 5 tasks maximum to reduce unnecessary API pressure)
+      const promises = tasksToCalibrate.map((task) =>
         prioritizeTaskWithAI(task.id, {
           title: task.title,
           description: task.description,
@@ -334,6 +339,28 @@ export const TaskDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Demo Mode Notice Warning Banner */}
+      {isDemoMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-amber-600/20 via-orange-600/15 to-amber-600/20 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(245,158,11,0.08)]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xl sm:text-2xl animate-bounce">⚠️</span>
+            <p className="text-xs sm:text-sm text-amber-200 font-medium leading-relaxed">
+              You're in Demo Mode — data is stored locally only on YOUR device. Sign in to save permanently.
+            </p>
+          </div>
+          <button
+            onClick={() => signOutUser()}
+            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-[#0A0F1E] font-black text-xs tracking-wider uppercase rounded-xl transition shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-1 cursor-pointer"
+          >
+            Sign In Now
+          </button>
+        </motion.div>
+      )}
+
       {/* Dynamic Header Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-1">
@@ -632,49 +659,65 @@ export const TaskDashboard: React.FC = () => {
           </div>
 
           {/* Render List */}
-          <div className="space-y-3.5">
-            <AnimatePresence mode="popLayout">
-              {sortedTasks.length > 0 ? (
-                sortedTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onToggleComplete={toggleTaskCompletion}
-                    onDelete={deleteTask}
-                    onEdit={(task) => setTaskToEdit(task)}
-                    onSelect={(task) => {
-                      if (task.completed) {
-                        setTaskToConfirmIncomplete(task);
-                      } else {
-                        setSelectedTaskForDetail(task);
-                      }
-                    }}
-                  />
-                ))
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="p-12 text-center glass rounded-2xl border border-dashed border-white/5 flex flex-col items-center justify-center gap-3"
-                >
-                  <div className="p-3 bg-white/5 text-gray-500 rounded-full">
-                    <ListTodo className="w-8 h-8" />
+          <div className="space-y-3.5 min-h-[450px]">
+            {tasksLoading ? (
+              // Task Loading Skeletons to prevent layout shifts and add visual interest
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="p-4 bg-slate-900/40 border border-white/5 rounded-2xl animate-pulse flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 w-2/3">
+                    <div className="w-5 h-5 bg-slate-800 rounded-md flex-shrink-0" />
+                    <div className="space-y-2 w-full">
+                      <div className="h-4 bg-slate-800 rounded w-1/3" />
+                      <div className="h-3 bg-slate-800 rounded w-3/4" />
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="text-sm font-bold text-white">No tasks here yet</h5>
-                    <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                      Add your very first task above to start organizing your day!
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setIsAddOpen(true)}
-                    className="mt-2 text-xs text-[#00D4FF] font-mono hover:underline"
+                  <div className="w-16 h-6 bg-slate-800 rounded-full" />
+                </div>
+              ))
+            ) : (
+              <AnimatePresence mode="popLayout">
+                {sortedTasks.length > 0 ? (
+                  sortedTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onToggleComplete={toggleTaskCompletion}
+                      onDelete={deleteTask}
+                      onEdit={(task) => setTaskToEdit(task)}
+                      onSelect={(task) => {
+                        if (task.completed) {
+                          setTaskToConfirmIncomplete(task);
+                        } else {
+                          setSelectedTaskForDetail(task);
+                        }
+                      }}
+                    />
+                  ))
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-12 text-center glass rounded-2xl border border-dashed border-white/5 flex flex-col items-center justify-center gap-3"
                   >
-                    + Add Your First Task
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    <div className="p-3 bg-white/5 text-gray-500 rounded-full">
+                      <ListTodo className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h5 className="text-sm font-bold text-white">No tasks here yet</h5>
+                      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                        Add your very first task above to start organizing your day!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsAddOpen(true)}
+                      className="mt-2 text-xs text-[#00D4FF] font-mono hover:underline"
+                    >
+                      + Add Your First Task
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
           </div>
         </div>
       </div>
@@ -695,18 +738,20 @@ export const TaskDashboard: React.FC = () => {
       </AnimatePresence>
 
       {/* Task Creation / Edit Modal */}
-      {(isAddOpen || taskToEdit) && (
-        <AddTaskModal
-          onClose={() => {
-            setIsAddOpen(false);
-            setTaskToEdit(null);
-          }}
-          onAdd={handleAddNewTask}
-          onEdit={handleEditTask}
-          taskToEdit={taskToEdit || undefined}
-          userRole={profile?.role}
-        />
-      )}
+      <AnimatePresence>
+        {(isAddOpen || taskToEdit) && (
+          <AddTaskModal
+            onClose={() => {
+              setIsAddOpen(false);
+              setTaskToEdit(null);
+            }}
+            onAdd={handleAddNewTask}
+            onEdit={handleEditTask}
+            taskToEdit={taskToEdit || undefined}
+            userRole={profile?.role}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Completed Task Confirmation Popup Modal */}
       <AnimatePresence>

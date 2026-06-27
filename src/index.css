@@ -8,6 +8,10 @@
   --font-space: "Space Mono", monospace;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Custom premium scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -87,6 +91,12 @@ button:not(.clickable-tab):not(.checkmark-btn) {
 }
 button:not(.clickable-tab):not(.checkmark-btn):hover {
   transform: translateY(-3px) scale(1.03) !important;
+}
+
+/* Active clicked scaling states for hyper-responsive feel */
+button:active, .pulse-button:active, .clickable-tab:active {
+  transform: translateY(1px) scale(0.97) !important;
+  transition: transform 0.05s ease-out !important;
 }
 
 .pulse-button {

@@ -14,6 +14,12 @@ import {
   getDoc
 } from "firebase/firestore";
 import { Goal } from "../types";
+import { 
+  getDemoGoals, 
+  saveDemoGoals, 
+  getDemoHabits, 
+  saveDemoHabits 
+} from "../services/demoStorage";
 
 // Helper to calculate date offsets in local timezone
 function getLocalDayOffset(offset: number): string {
@@ -77,34 +83,14 @@ export function useGoalsAndHabits() {
       return;
     }
 
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localGoalsStr = localStorage.getItem("rapidfocus_demo_goals");
-      const localGoals: Goal[] = localGoalsStr ? JSON.parse(localGoalsStr) : [
-        {
-          id: "demo-goal-1",
-          title: "Daily Focus Marathon",
-          type: "habit",
-          targetDays: 7,
-          completedDays: [],
-          streak: 0,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: "demo-goal-2",
-          title: "Read research paper drafts",
-          type: "goal",
-          targetDays: 3,
-          completedDays: [],
-          streak: 0,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      if (!localGoalsStr) {
-        localStorage.setItem("rapidfocus_demo_goals", JSON.stringify(localGoals));
-      }
-      setGoals(localGoals);
-      setLoading(false);
-      return;
+    if (isDemoMode) {
+      const timer = setTimeout(() => {
+        const localGoals = getDemoGoals();
+        const localHabits = getDemoHabits();
+        setGoals([...localGoals, ...localHabits]);
+        setLoading(false);
+      }, 300);
+      return () => clearTimeout(timer);
     }
 
     setLoading(true);
@@ -214,8 +200,31 @@ export function useGoalsAndHabits() {
   const addGoal = async (title: string, type: "goal" | "habit", targetDays = 3) => {
     if (!user) throw new Error("Authentication status required.");
     
+    if (isDemoMode) {
+      const newGoalData: Goal = {
+        id: `demo-${type}-${Date.now()}`,
+        title,
+        type,
+        targetDays: type === "goal" ? targetDays : 7, // habits are daily (7)
+        completedDays: [],
+        streak: 0,
+        createdAt: new Date().toISOString()
+      };
+      if (type === "habit") {
+        const habits = getDemoHabits();
+        habits.unshift(newGoalData);
+        saveDemoHabits(habits);
+      } else {
+        const goalsList = getDemoGoals();
+        goalsList.unshift(newGoalData);
+        saveDemoGoals(goalsList);
+      }
+      setGoals([...getDemoGoals(), ...getDemoHabits()]);
+      return newGoalData.id;
+    }
+
     const newGoalData: Goal = {
-      id: (isDemoMode || user.uid === "demo-sandbox-uid") ? `demo-goal-${Date.now()}` : "",
+      id: "",
       title,
       type,
       targetDays: type === "goal" ? targetDays : 7, // habits are daily (7)
@@ -223,15 +232,6 @@ export function useGoalsAndHabits() {
       streak: 0,
       createdAt: new Date().toISOString()
     };
-
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localGoalsStr = localStorage.getItem("rapidfocus_demo_goals");
-      const localGoals: Goal[] = localGoalsStr ? JSON.parse(localGoalsStr) : [];
-      const updated = [newGoalData, ...localGoals];
-      localStorage.setItem("rapidfocus_demo_goals", JSON.stringify(updated));
-      setGoals(updated);
-      return newGoalData.id;
-    }
 
     const path = `users/${user.uid}/goals`;
     try {
@@ -245,10 +245,13 @@ export function useGoalsAndHabits() {
   // Toggle completion mark of a custom day
   const toggleGoalDate = async (goalId: string, dateStr: string) => {
     if (!user) return;
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localGoalsStr = localStorage.getItem("rapidfocus_demo_goals");
-      const localGoals: Goal[] = localGoalsStr ? JSON.parse(localGoalsStr) : [];
-      const updated = localGoals.map(g => {
+    if (isDemoMode) {
+      const localGoals = getDemoGoals();
+      const localHabits = getDemoHabits();
+      let updatedGoals = [...localGoals];
+      let updatedHabits = [...localHabits];
+      
+      const updateList = (list: Goal[]) => list.map(g => {
         if (g.id === goalId) {
           let updatedCompletedDays = [...g.completedDays];
           if (updatedCompletedDays.includes(dateStr)) {
@@ -265,8 +268,16 @@ export function useGoalsAndHabits() {
         }
         return g;
       });
-      localStorage.setItem("rapidfocus_demo_goals", JSON.stringify(updated));
-      setGoals(updated);
+
+      const isHabit = localHabits.some((h: any) => h.id === goalId);
+      if (isHabit) {
+        updatedHabits = updateList(localHabits);
+        saveDemoHabits(updatedHabits);
+      } else {
+        updatedGoals = updateList(localGoals);
+        saveDemoGoals(updatedGoals);
+      }
+      setGoals([...updatedGoals, ...updatedHabits]);
       return;
     }
     const path = `users/${user.uid}/goals/${goalId}`;
@@ -297,12 +308,14 @@ export function useGoalsAndHabits() {
   // Delete Goal or Habit
   const deleteGoal = async (goalId: string) => {
     if (!user) return;
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localGoalsStr = localStorage.getItem("rapidfocus_demo_goals");
-      const localGoals: Goal[] = localGoalsStr ? JSON.parse(localGoalsStr) : [];
-      const updated = localGoals.filter(g => g.id !== goalId);
-      localStorage.setItem("rapidfocus_demo_goals", JSON.stringify(updated));
-      setGoals(updated);
+    if (isDemoMode) {
+      const localGoals = getDemoGoals();
+      const localHabits = getDemoHabits();
+      const updatedGoals = localGoals.filter((g: any) => g.id !== goalId);
+      const updatedHabits = localHabits.filter((h: any) => h.id !== goalId);
+      saveDemoGoals(updatedGoals);
+      saveDemoHabits(updatedHabits);
+      setGoals([...updatedGoals, ...updatedHabits]);
       return;
     }
     const path = `users/${user.uid}/goals/${goalId}`;

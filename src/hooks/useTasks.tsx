@@ -13,6 +13,12 @@ import {
   Timestamp 
 } from "firebase/firestore";
 import { Task } from "../types";
+import { 
+  getDemoTasks, 
+  saveDemoTasks, 
+  addDemoTask, 
+  updateDemoTask 
+} from "../services/demoStorage";
 
 export function useTasks() {
   const { user, profile, isDemoMode } = useAuth();
@@ -26,38 +32,13 @@ export function useTasks() {
       return;
     }
 
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localTasksStr = localStorage.getItem("rapidfocus_demo_tasks");
-      const localTasks: Task[] = localTasksStr ? JSON.parse(localTasksStr) : [
-        {
-          id: "demo-task-1",
-          title: "Complete RapidFocus Onboarding",
-          description: "Initialize and explore the main control dashboard",
-          deadline: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
-          priority: "Critical",
-          category: "Work",
-          completed: false,
-          completedAt: null,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: "demo-task-2",
-          title: "Draft project proposal",
-          description: "Use AI coaching tool to brainstorm structure",
-          deadline: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
-          priority: "High",
-          category: "Research",
-          completed: false,
-          completedAt: null,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      if (!localTasksStr) {
-        localStorage.setItem("rapidfocus_demo_tasks", JSON.stringify(localTasks));
-      }
-      setTasks(localTasks);
-      setLoading(false);
-      return;
+    if (isDemoMode) {
+      // Simulate loading state briefly for ultra-smooth UI feel
+      const timer = setTimeout(() => {
+        setTasks(getDemoTasks());
+        setLoading(false);
+      }, 300);
+      return () => clearTimeout(timer);
     }
 
     setLoading(true);
@@ -149,23 +130,20 @@ export function useTasks() {
   const addTask = async (taskData: Omit<Task, "id" | "createdAt" | "completed">) => {
     if (!user) throw new Error("User must be authenticated");
 
+    if (isDemoMode) {
+      const newTask = addDemoTask(taskData);
+      setTasks(getDemoTasks());
+      prioritizeTaskWithAI(newTask.id, taskData, getDemoTasks());
+      return newTask.id;
+    }
+
     const newTask: Task = {
-      id: (isDemoMode || user.uid === "demo-sandbox-uid") ? `demo-task-${Date.now()}` : "",
+      id: "",
       ...taskData,
       completed: false,
       completedAt: null,
       createdAt: new Date().toISOString()
     };
-
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localTasksStr = localStorage.getItem("rapidfocus_demo_tasks");
-      const localTasks: Task[] = localTasksStr ? JSON.parse(localTasksStr) : [];
-      const updated = [newTask, ...localTasks];
-      localStorage.setItem("rapidfocus_demo_tasks", JSON.stringify(updated));
-      setTasks(updated);
-      prioritizeTaskWithAI(newTask.id, taskData, updated);
-      return newTask.id;
-    }
 
     const path = `users/${user.uid}/tasks`;
     try {
@@ -180,16 +158,12 @@ export function useTasks() {
 
   const toggleTaskCompletion = async (taskId: string, completed: boolean) => {
     if (!user) return;
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localTasksStr = localStorage.getItem("rapidfocus_demo_tasks");
-      const localTasks: Task[] = localTasksStr ? JSON.parse(localTasksStr) : [];
-      const updated = localTasks.map(t => t.id === taskId ? {
-        ...t,
+    if (isDemoMode) {
+      updateDemoTask(taskId, {
         completed,
         completedAt: completed ? new Date().toISOString() : null
-      } : t);
-      localStorage.setItem("rapidfocus_demo_tasks", JSON.stringify(updated));
-      setTasks(updated);
+      });
+      setTasks(getDemoTasks());
       return;
     }
     const path = `users/${user.uid}/tasks/${taskId}`;
@@ -206,11 +180,9 @@ export function useTasks() {
 
   const deleteTask = async (taskId: string) => {
     if (!user) return;
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localTasksStr = localStorage.getItem("rapidfocus_demo_tasks");
-      const localTasks: Task[] = localTasksStr ? JSON.parse(localTasksStr) : [];
-      const updated = localTasks.filter(t => t.id !== taskId);
-      localStorage.setItem("rapidfocus_demo_tasks", JSON.stringify(updated));
+    if (isDemoMode) {
+      const updated = getDemoTasks().filter((t: any) => t.id !== taskId);
+      saveDemoTasks(updated);
       setTasks(updated);
       return;
     }
@@ -228,11 +200,9 @@ export function useTasks() {
     updates: Partial<Omit<Task, "id" | "createdAt">>
   ) => {
     if (!user) return;
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localTasksStr = localStorage.getItem("rapidfocus_demo_tasks");
-      const localTasks: Task[] = localTasksStr ? JSON.parse(localTasksStr) : [];
-      const updated = localTasks.map(t => t.id === taskId ? { ...t, ...updates } : t);
-      localStorage.setItem("rapidfocus_demo_tasks", JSON.stringify(updated));
+    if (isDemoMode) {
+      updateDemoTask(taskId, updates);
+      const updated = getDemoTasks();
       setTasks(updated);
 
       const shouldPrioritize =
@@ -297,18 +267,14 @@ export function useTasks() {
     timeBlock: string
   ) => {
     if (!user) return;
-    if (isDemoMode || user.uid === "demo-sandbox-uid") {
-      const localTasksStr = localStorage.getItem("rapidfocus_demo_tasks");
-      const localTasks: Task[] = localTasksStr ? JSON.parse(localTasksStr) : [];
-      const updated = localTasks.map(t => t.id === taskId ? {
-        ...t,
+    if (isDemoMode) {
+      updateDemoTask(taskId, {
         aiPriorityScore: score,
         priority: label,
         aiReasoning: reasoning,
         suggestedTimeBlock: timeBlock
-      } : t);
-      localStorage.setItem("rapidfocus_demo_tasks", JSON.stringify(updated));
-      setTasks(updated);
+      });
+      setTasks(getDemoTasks());
       return;
     }
     const path = `users/${user.uid}/tasks/${taskId}`;
