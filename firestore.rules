@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user matches the document/collection owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User profiles & settings
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Tasks subcollection
+      match /tasks/{taskId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Goals subcollection
+      match /goals/{goalId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Habits subcollection
+      match /habits/{habitId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Chat messages subcollection
+      match /messages/{messageId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Analytics document/collection
+      match /analytics/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "user": {
+      "title": "User Profile",
+      "description": "Profile metadata of registered workspace users.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user reference ID matching auth" },
+        "name": { "type": "string", "description": "Display name of the user" },
+        "email": { "type": "string", "description": "Email address" },
+        "role": { "type": "string", "enum": ["Student", "Entrepreneur", "Professional"], "description": "Operational role defining category sphere presets" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Date and time profile was setup" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "task": {
+      "title": "Workspace Task",
+      "description": "An action item registry entry aligned with user deadlines.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Task summary or description" },
+        "description": { "type": "string", "description": "Supplementary detail and reference files" },
+        "deadline": { "type": "string", "format": "date-time", "description": "Deadline timeout target" },
+        "priority": { "type": "string", "enum": ["Critical", "High", "Medium", "Low"], "description": "Priority urgency level" },
+        "category": { "type": "string", "description": "Sphere classification" },
+        "completed": { "type": "boolean", "description": "Status checkbox tracker" },
+        "completedAt": { "type": "string", "format": "date-time", "description": "Timestamp when finished" },
+        "aiPriorityScore": { "type": "number", "description": "Calculated score by neural calibrator" },
+        "aiReasoning": { "type": "string", "description": "Coaching tips logical summary" },
+        "suggestedTimeBlock": { "type": "string", "description": "Recommended calendar slot" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When task was filed" }
+      },
+      "required": ["title", "deadline", "priority", "category", "completed", "createdAt"]
+    },
+    "goal": {
+      "title": "Weekly Goal",
+      "description": "A weekly milestone target.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Goal title text" },
+        "completed": { "type": "boolean", "description": "Completion flag" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "completed", "createdAt"]
+    },
+    "habit": {
+      "title": "Daily Habit",
+      "description": "Repetitive daily exercises with history calendars.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Habit description" },
+        "history": { "type": "array", "items": { "type": "string" }, "description": "Array of string dates in YYYY-MM-DD format" },
+        "streak": { "type": "number", "description": "Consecutive active days count" },
+        "lastCompleted": { "type": "string", "description": "Last date processed" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Habit addition timeline" }
+      },
+      "required": ["title", "history", "streak", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Store individual workspace owner properties"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "task",
+      "description": "Registry of tasks assigned to each workspace owner"
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": "goal",
+      "description": "Weekly goals database collection"
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": "habit",
+      "description": "Daily habits database collection"
+    }
+  }
+}

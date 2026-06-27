@@ -1,0 +1,6 @@
+{
+  "name": "RapidFocus",
+  "description": "A smart last-minute life saver productivity app for students and professionals using Gemini AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
