@@ -260,7 +260,7 @@ User sets 2 hour timer for assignment
 
 | Field | Details |
 |---|---|
-| **Event** | BlockseBlock Hackathon 2026 |
+| **Event** | Vibe2Ship Hackathon 2026 |
 | **Problem Statement** | PS1 — The Last-Minute Life Saver |
 | **Timeline** | 22nd June 3PM — 29th June 2PM |
 | **Core Tool** | Google AI Studio + Gemini API |
