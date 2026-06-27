@@ -10,7 +10,7 @@
 [![Built With](https://img.shields.io/badge/Built%20With-Gemini%20AI-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://aistudio.google.com)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
 
-*Built for BlockseBlock Hackathon 2026 — Problem Statement 1: The Last-Minute Life Saver*
+*Built for Vibe2Ship Hackathon 2026 — Problem Statement 1: The Last-Minute Life Saver*
 
 </div>
 
@@ -271,15 +271,14 @@ User sets 2 hour timer for assignment
 ## 👩‍💻 Built By
 
 **Kalpana Naikodi**
-- 🎓 B.Tech AI & Data Science — VESIT Mumbai (2025-2029)
-- 💼 Full-stack developer | AI enthusiast
+
 - 🐙 GitHub: [@Kalpana0107](https://github.com/Kalpana0107)
 
 ---
 
 ## 📄 License
 
-This project was built for the BlockseBlock Hackathon 2026.
+This project was built for the Vibe2Ship Hackathon 2026.
 Feel free to use it as a reference for learning purposes.
 
 ---
