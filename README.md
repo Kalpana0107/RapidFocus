@@ -267,6 +267,14 @@ User sets 2 hour timer for assignment
 | **Deployed** | Google Cloud Run |
 
 ---
+## 💙 Special Thanks
+
+We would like to acknowledge the following tools and communities that contributed to the development of this project:
+
+- **Google AI Studio** for access to the Gemini 1.5 Flash Vision model.
+- **Firebase** for handling authentication and cloud-based data storage.
+- **Coding Ninjas** in collaboration with **Google for Developers** for providing the Vibe2Ship Hackathon platform.
+
 
 ## 👩💻 Built By
 
