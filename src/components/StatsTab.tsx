@@ -448,29 +448,14 @@ export function StatsTab() {
               )}
             </AnimatePresence>
           </div>
-
-          {/* Live / Demo Mode indicator badge */}
-          <div>
-            {isSimulation ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-mono rounded-xl font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                SIMULATION CONSOLE (DEMO)
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#0DFFD4]/15 border border-[#0DFFD4]/25 text-[#0DFFD4] text-[10px] font-mono rounded-xl font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0DFFD4] animate-pulse" />
-                LIVE TELEMETRY PORTAL
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
       {isSimulation && (
-        <div className="p-4 bg-blue-950/15 border border-blue-500/20 rounded-2xl text-xs text-slate-355 leading-relaxed flex items-start gap-2.5">
+        <div className="p-4 bg-blue-950/15 border border-blue-500/20 rounded-2xl text-xs text-slate-300 leading-relaxed flex items-start gap-2.5">
           <AlertCircle className="w-4.5 h-4.5 text-[#00D4FF] flex-shrink-0 mt-0.5" />
           <span>
-            <strong>No completed tasks yet.</strong> To demonstrate the visual capabilities of this dashboard, the graphs are currently visualizing an idealized <strong>Mock Productivity Simulation</strong>. Try modifying and completing a pending deadline to unlock fully real-time statistics!
+            <strong>No completed tasks yet.</strong> To showcase the analytic features of RapidFocus, the graphs are currently showing a preview. Create and complete a task to unlock your real-time statistics!
           </span>
         </div>
       )}

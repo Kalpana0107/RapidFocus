@@ -339,28 +339,6 @@ export const TaskDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Demo Mode Notice Warning Banner */}
-      {isDemoMode && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-amber-600/20 via-orange-600/15 to-amber-600/20 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(245,158,11,0.08)]"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-xl sm:text-2xl animate-bounce">⚠️</span>
-            <p className="text-xs sm:text-sm text-amber-200 font-medium leading-relaxed">
-              You're in Demo Mode — data is stored locally only on YOUR device. Sign in to save permanently.
-            </p>
-          </div>
-          <button
-            onClick={() => signOutUser()}
-            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-[#0A0F1E] font-black text-xs tracking-wider uppercase rounded-xl transition shadow-[0_0_15px_rgba(245,158,11,0.25)] flex items-center gap-1 cursor-pointer"
-          >
-            Sign In Now
-          </button>
-        </motion.div>
-      )}
-
       {/* Dynamic Header Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-1">
@@ -397,43 +375,6 @@ export const TaskDashboard: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* IMMINENT ALERTS (Pulsing Red Card if Task deadline is within 2 hours) */}
-      <AnimatePresence>
-        {urgentTasks.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-red-950/40 border border-red-500/40 p-4 rounded-2xl relative overflow-hidden shadow-[0_0_20px_rgba(239,68,68,0.15)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse duration-1500"
-          >
-            <div className="absolute top-0 right-0 -mr-6 -mt-6 w-20 h-20 bg-red-500/5 rounded-full blur-xl" />
-            <div className="flex items-start md:items-center gap-3">
-              <div className="p-2.5 bg-red-500/25 text-red-400 rounded-xl flex-shrink-0 animate-bounce">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-mono font-bold text-red-400 tracking-widest uppercase flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: "5s" }} /> ⚠️ Due Soon
-                </h4>
-                <p className="text-xs text-slate-200 mt-1">
-                  You have <span className="text-orange-400 font-mono font-bold uppercase">{urgentTasks.length} task(s)</span> due inside <span className="font-bold underline text-red-400">2 hours</span>!
-                </p>
-                <div className="mt-1.5 flex flex-wrap gap-2">
-                  {urgentTasks.map((t) => (
-                    <span 
-                      key={t.id} 
-                      className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-red-500/20 text-red-200 font-mono text-[10px] rounded-lg border border-red-500/30"
-                    >
-                      "{t.title}" — <span className="font-bold text-red-300">{getRemainingTimeText(t.deadline!)} left</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* DAILY BRIEFING BANNER - Dismissible and AI powered */}
       <AnimatePresence>
@@ -748,7 +689,7 @@ export const TaskDashboard: React.FC = () => {
             onAdd={handleAddNewTask}
             onEdit={handleEditTask}
             taskToEdit={taskToEdit || undefined}
-            userRole={profile?.role}
+            userRole={profile?.role || "Professional"}
           />
         )}
       </AnimatePresence>
@@ -810,7 +751,7 @@ export const TaskDashboard: React.FC = () => {
             tasks={tasks}
             user={user}
             isDemoMode={isDemoMode}
-            userRole={profile?.role || "Student"}
+            userRole={profile?.role || "Professional"}
             userName={profile?.name || "User"}
             updateTask={updateTask}
             onSuccess={() => {

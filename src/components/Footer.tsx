@@ -146,7 +146,7 @@ export const Footer: React.FC = () => {
           </h4>
           <ul className="flex flex-col gap-3 text-xs text-slate-400">
             <li className="hover:text-white hover:translate-x-1 transition-all duration-200 cursor-default">
-              BlockseBlock Hackathon 2026
+              Vibe2Ship Hackathon 2026
             </li>
             <li className="hover:text-white hover:translate-x-1 transition-all duration-200 cursor-default">
               Problem Statement 1
@@ -165,7 +165,7 @@ export const Footer: React.FC = () => {
       {/* Bottom Bar */}
       <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-slate-500 font-mono relative z-10">
         <div>
-          © 2026 RapidFocus. Built for BlockseBlock Hackathon.
+          © 2026 RapidFocus. Built for Vibe2Ship Hackathon 2026.
         </div>
         <div>
           Made with 💙 by <span className="text-slate-300 font-bold">Kalpana Naikodi</span> — VESIT Mumbai

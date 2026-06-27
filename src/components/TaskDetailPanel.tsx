@@ -83,6 +83,9 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({
   const totalSecondsSpentRef = useRef(0);
   const lastTickRef = useRef<number | null>(null);
 
+  const [isCalDropdownOpen, setIsCalDropdownOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
   // Reset timer on task change
   useEffect(() => {
     setIsRunning(false);
@@ -93,6 +96,8 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({
     setPopups([]);
     totalSecondsSpentRef.current = task.timeSpent || 0;
     lastTickRef.current = null;
+    setIsCalDropdownOpen(false);
+    setIsCopied(false);
   }, [task.id, task.completed, task.timeSpent]);
 
   // Handle ticking
@@ -287,6 +292,17 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({
     onClose();
   };
 
+  const formatCalDate = (d: Date) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+
+  const getEventTimes = () => {
+    const start = new Date();
+    let end = new Date(task.deadline!);
+    if (isNaN(end.getTime()) || end.getTime() <= start.getTime()) {
+      end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour after start
+    }
+    return { start, end };
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Dark overlay backdrop */}
@@ -388,10 +404,110 @@ export const TaskDetailPanel: React.FC<TaskDetailPanelProps> = ({
             <p className="text-sm text-slate-200 leading-relaxed font-sans">{task.description}</p>
             
             {task.deadline && (
-              <div className="pt-3 border-t border-white/5 flex items-center gap-2 text-xs font-mono text-slate-400">
-                <Calendar className="w-4 h-4 text-[#00D4FF]" />
-                <span>Deadline:</span>
-                <span className="text-white font-bold">{new Date(task.deadline).toLocaleString()}</span>
+              <div className="pt-3 border-t border-white/5 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                  <Calendar className="w-4 h-4 text-[#00D4FF]" />
+                  <span>Deadline:</span>
+                  <span className="text-white font-bold">{new Date(task.deadline).toLocaleString()}</span>
+                </div>
+
+                {!task.completed && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsCalDropdownOpen(!isCalDropdownOpen)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-[#00D4FF]/30 hover:border-[#00D4FF]/65 text-[#00D4FF] hover:text-white rounded-lg text-xs font-mono transition cursor-pointer"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      Add to Calendar
+                    </button>
+
+                    <AnimatePresence>
+                      {isCalDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute left-0 mt-1.5 w-56 rounded-xl bg-slate-950 border border-white/10 shadow-2xl p-1.5 z-20 space-y-0.5"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const { start, end } = getEventTimes();
+                              const text = encodeURIComponent(task.title);
+                              const details = encodeURIComponent(task.description || "");
+                              const dates = `${formatCalDate(start)}/${formatCalDate(end)}`;
+                              const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&dates=${dates}`;
+                              window.open(gCalUrl, "_blank");
+                              setIsCalDropdownOpen(false);
+                            }}
+                            className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-sans text-slate-300 hover:bg-[#FF5722]/15 hover:text-[#FF5722] transition-colors cursor-pointer"
+                          >
+                            <span className="text-sm">📅</span>
+                            <span>Google Calendar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const { start, end } = getEventTimes();
+                              const formattedStart = formatCalDate(start);
+                              const formattedEnd = formatCalDate(end);
+                              const icsContent = [
+                                "BEGIN:VCALENDAR",
+                                "VERSION:2.0",
+                                "BEGIN:VEVENT",
+                                `SUMMARY:${task.title}`,
+                                `DESCRIPTION:${task.description || ""}`,
+                                `DTSTART:${formattedStart}`,
+                                `DTEND:${formattedEnd}`,
+                                "END:VEVENT",
+                                "END:VCALENDAR"
+                              ].join("\r\n");
+
+                              const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+                              const url = URL.createObjectURL(blob);
+                              const link = document.createElement("a");
+                              link.href = url;
+                              link.download = `${task.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.ics`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              URL.revokeObjectURL(url);
+                              setIsCalDropdownOpen(false);
+                            }}
+                            className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-sans text-slate-300 hover:bg-[#0078D4]/15 hover:text-[#0078D4] transition-colors cursor-pointer"
+                          >
+                            <span className="text-sm">💻</span>
+                            <span>Apple / Outlook (.ics)</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const formattedDeadline = new Date(task.deadline!).toLocaleString();
+                              const copyText = `📅 EVENT: ${task.title}\n📝 NOTES: ${task.description || ""}\n⏰ DEADLINE: ${formattedDeadline}`;
+                              try {
+                                await navigator.clipboard.writeText(copyText);
+                                setIsCopied(true);
+                                setTimeout(() => setIsCopied(false), 2000);
+                              } catch (err) {
+                                console.error("Failed to copy details to clipboard:", err);
+                              }
+                            }}
+                            className="w-full text-left flex items-center justify-between px-3 py-2 rounded-lg text-xs font-sans text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">📋</span>
+                              <span>Copy Event Details</span>
+                            </div>
+                            {isCopied && <span className="text-emerald-400 font-bold font-mono">✓</span>}
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
             )}
           </div>

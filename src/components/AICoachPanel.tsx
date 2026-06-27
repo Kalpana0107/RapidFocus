@@ -216,108 +216,22 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
   profile
 }) => {
   const { user, isDemoMode } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const defaultGreeting: ChatMessage = {
+    id: "greeting",
+    role: "assistant",
+    content: "👋 Hi! I'm your RapidFocus AI Coach. How can I help you today?",
+    timestamp: new Date()
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>([defaultGreeting]);
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [clearedAt, setClearedAt] = useState<Date | null>(() => {
-    const saved = sessionStorage.getItem("rapidfocus_chat_cleared_at");
-    return saved ? new Date(saved) : null;
-  });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Sync and fetch chat messages dynamically from Firestore (or localStorage in Demo mode)
-  useEffect(() => {
-    const overdueCount = tasks.filter(t => !t.completed && t.deadline && new Date(t.deadline) < new Date()).length;
-    const dueSoonCount = tasks.filter(t => {
-      if (t.completed || !t.deadline) return false;
-      const hoursLeft = (new Date(t.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60);
-      return hoursLeft > 0 && hoursLeft <= 24;
-    }).length;
-
-    let alertContext = "";
-    if (overdueCount > 0) {
-      alertContext = ` I notice you currently have **${overdueCount} late task${overdueCount === 1 ? "" : "s"}** that need attention. Let's make an immediate schedule to get them completed!`;
-    } else if (dueSoonCount > 0) {
-      alertContext = ` You have **${dueSoonCount} task${dueSoonCount === 1 ? "" : "s"}** due within 24 hours. Let's plan some solid work intervals today!`;
-    }
-
-    const defaultGreetingContent = `Hi **${profile.name || "friend"}**! I'm your **RapidFocus AI Coach**. What can I help you with today? 😊`;
-
-    const defaultGreeting: ChatMessage = {
-      id: "greeting",
-      role: "assistant",
-      content: defaultGreetingContent,
-      timestamp: new Date()
-    };
-
-    if (isDemoMode || (user && user.uid === "demo-sandbox-uid")) {
-      const localMsgStr = localStorage.getItem("rapidfocus_demo_messages");
-      if (localMsgStr) {
-        const parsed = JSON.parse(localMsgStr).map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp)
-        }));
-        setMessages(parsed);
-      } else {
-        localStorage.setItem("rapidfocus_demo_messages", JSON.stringify([defaultGreeting]));
-        setMessages([defaultGreeting]);
-      }
-      return;
-    }
-
-    if (!user || user.uid === "demo-sandbox-uid") {
-      setMessages([defaultGreeting]);
-      return;
-    }
-
-    const q = query(
-      collection(db, "users", user.uid, "messages"),
-      orderBy("timestamp", "asc")
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgList: ChatMessage[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        let tDate = new Date();
-        if (data.timestamp) {
-          tDate = data.timestamp.seconds 
-            ? new Date(data.timestamp.seconds * 1000) 
-            : new Date(data.timestamp);
-        }
-        msgList.push({
-          id: docSnap.id,
-          role: data.role || "assistant",
-          content: data.content || "",
-          timestamp: tDate
-        });
-      });
-
-      if (msgList.length === 0) {
-        setMessages([defaultGreeting]);
-      } else {
-        setMessages(msgList);
-      }
-    }, (error) => {
-      console.error("Error fetching chat messages:", error);
-      handleFirestoreError(error, OperationType.GET, `users/${user.uid}/messages`);
-    });
-
-    return () => unsubscribe();
-  }, [user, isDemoMode, profile, tasks.length]);
-
-  // Filter messages by clearedAt timestamp
-  const visibleMessages = messages.filter(m => !clearedAt || m.timestamp > clearedAt);
-  const displayMessages = visibleMessages.length > 0 ? visibleMessages : [
-    {
-      id: "cleared-welcome",
-      role: "assistant" as const,
-      content: `👋 Hi ${profile.name || "friend"}! I'm your RapidFocus AI Coach. Ask me anything about your tasks, schedule, or productivity. I'm here to help!`,
-      timestamp: new Date()
-    }
-  ];
+  const displayMessages = messages;
 
   // Scroll to bottom whenever messages list is updated or generation state shifts
   useEffect(() => {
@@ -333,29 +247,19 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
 
     setIsGenerating(true);
 
-    try {
-      // 1. Save user message to DB / LocalStorage
-      if (isDemoMode || (user && user.uid === "demo-sandbox-uid")) {
-        const localMsgStr = localStorage.getItem("rapidfocus_demo_messages");
-        const current = localMsgStr ? JSON.parse(localMsgStr) : [];
-        const updated = [...current, { id: `m-${Date.now()}-user`, role: "user", content: userMessageText, timestamp: new Date().toISOString() }];
-        localStorage.setItem("rapidfocus_demo_messages", JSON.stringify(updated));
-        setMessages(updated.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
-      } else if (user) {
-        try {
-          await addDoc(collection(db, "users", user.uid, "messages"), {
-            role: "user",
-            content: userMessageText,
-            timestamp: new Date()
-          });
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/messages`);
-        }
-      }
+    const newUserMessage: ChatMessage = {
+      id: `m-${Date.now()}-user`,
+      role: "user",
+      content: userMessageText,
+      timestamp: new Date()
+    };
 
+    setMessages(prev => [...prev, newUserMessage]);
+
+    try {
       // Map message history to lightweight server format
       // Include the new user message we just sent
-      const historyPayload = [...messages, { role: "user", content: userMessageText }].map(m => ({
+      const historyPayload = [...messages, newUserMessage].map(m => ({
         role: m.role,
         content: m.content
       }));
@@ -378,45 +282,23 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
       const data = await res.json();
       const responseContent = data.text || "I processed your priority logs. Let's structure your target timeline next.";
       
-      // 2. Save assistant response to DB / LocalStorage
-      if (isDemoMode || (user && user.uid === "demo-sandbox-uid")) {
-        const localMsgStr = localStorage.getItem("rapidfocus_demo_messages");
-        const current = localMsgStr ? JSON.parse(localMsgStr) : [];
-        const updated = [...current, { id: `m-${Date.now()}-coach`, role: "assistant", content: responseContent, timestamp: new Date().toISOString() }];
-        localStorage.setItem("rapidfocus_demo_messages", JSON.stringify(updated));
-        setMessages(updated.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
-      } else if (user) {
-        try {
-          await addDoc(collection(db, "users", user.uid, "messages"), {
-            role: "assistant",
-            content: responseContent,
-            timestamp: new Date()
-          });
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/messages`);
-        }
-      }
+      const newAssistantMessage: ChatMessage = {
+        id: `m-${Date.now()}-coach`,
+        role: "assistant",
+        content: responseContent,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, newAssistantMessage]);
     } catch (err: any) {
       console.error("AI Coach interaction failure:", err);
       const errorContent = "🚨 *Disconnection alert*: I encountered a brief signal disruption. Let's try sending that focus request one more time.";
-      
-      if (isDemoMode || (user && user.uid === "demo-sandbox-uid")) {
-        const localMsgStr = localStorage.getItem("rapidfocus_demo_messages");
-        const current = localMsgStr ? JSON.parse(localMsgStr) : [];
-        const updated = [...current, { id: `m-${Date.now()}-err`, role: "assistant", content: errorContent, timestamp: new Date().toISOString() }];
-        localStorage.setItem("rapidfocus_demo_messages", JSON.stringify(updated));
-        setMessages(updated.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
-      } else if (user) {
-        try {
-          await addDoc(collection(db, "users", user.uid, "messages"), {
-            role: "assistant",
-            content: errorContent,
-            timestamp: new Date()
-          });
-        } catch (error) {
-          handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/messages`);
-        }
-      }
+      const newErrorMessage: ChatMessage = {
+        id: `m-${Date.now()}-err`,
+        role: "assistant",
+        content: errorContent,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, newErrorMessage]);
     } finally {
       setIsGenerating(false);
     }
@@ -488,8 +370,8 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
                     <div
                       className={`p-3 rounded-2xl text-xs max-w-[85%] leading-relaxed ${
                         isUser
-                          ? "bg-[#00D4FF]/10 text-white border border-[#00D4FF]/20 rounded-tr-none"
-                          : "bg-white/5 border border-white/5 text-slate-200 rounded-tl-none font-sans"
+                           ? "bg-[#00D4FF]/10 text-white border border-[#00D4FF]/20 rounded-tr-none"
+                           : "bg-white/5 border border-white/5 text-slate-200 rounded-tl-none font-sans"
                       }`}
                     >
                       {isUser ? (
@@ -602,9 +484,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const now = new Date();
-                        setClearedAt(now);
-                        sessionStorage.setItem("rapidfocus_chat_cleared_at", now.toISOString());
+                        setMessages([defaultGreeting]);
                         setShowClearConfirm(false);
                       }}
                       className="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-xl transition cursor-pointer"

@@ -146,6 +146,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("demo_tasks");
     localStorage.removeItem("demo_goals");
     localStorage.removeItem("demo_habits");
+    localStorage.removeItem("rapidfocus_demo_messages");
+    localStorage.removeItem("rapidfocus_highlight_task_id");
+    localStorage.removeItem("rapidfocus_briefing_cache");
+    localStorage.removeItem("rapidfocus_stats_insight_cache");
+    localStorage.removeItem("rapidfocus_goals_feedback_cache");
+    localStorage.removeItem("rapidfocus_notified_tasks");
     setIsDemoMode(false);
     await signOut(auth);
     setUser(null);

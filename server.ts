@@ -104,7 +104,7 @@ async function startServer() {
       const prompt = `You are an elite cognitive productivity planner and systems coach. 
 We need you to generate a highly personalized daily focus schedule based on the user's focus role, their pending tasks, their current mood check for each task, and their available free time slots today.
 
-User Focus Role: ${role || "Student"}
+User Focus Role: ${role || "Professional"}
 User Name: ${userName || "User"}
 Current Time Context: ${new Date().toISOString()}
 
@@ -159,7 +159,7 @@ Remember:
       };
 
       const timeSlots = freeTime ? freeTime.split(",").map((s: string) => s.trim()) : ["09:00 AM - 10:30 AM", "03:00 PM - 04:30 PM"];
-      let scheduleContent = `===================================\n📅 MY AI FOCUS SCHEDULE FOR TODAY\n===================================\nHello ${userName || "friend"}! Here is your personalized focus schedule (running in adaptive offline mode due to high AI demand) tailored to your ${role || "Student"} role. Based on your task priority levels and mood checks, we've organized your sessions to maximize your energy level.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🕒 TIME BLOCK | 📝 TASK DETAILS & COGNITIVE FIT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      let scheduleContent = `===================================\n📅 MY AI FOCUS SCHEDULE FOR TODAY\n===================================\nHello ${userName || "friend"}! Here is your personalized focus schedule (running in adaptive offline mode due to high AI demand) tailored to your ${role || "Professional"} role. Based on your task priority levels and mood checks, we've organized your sessions to maximize your energy level.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🕒 TIME BLOCK | 📝 TASK DETAILS & COGNITIVE FIT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
 
       tasks.forEach((t: any, index: number) => {
         const slot = timeSlots[index % timeSlots.length] || "Today, Focus Window";
@@ -208,7 +208,7 @@ Remember:
 
       const prompt = `You are the brain of RapidFocus's AI Task Prioritization engine, specializing in cognitive workload management, task scheduling, and real-time Eisenhower Matrix calibration for student and professional focus.
 
-User's Profile Persona (Role): ${role || "Student"}
+User's Profile Persona (Role): ${role || "Professional"}
 Current Time Context: ${new Date().toISOString()}
 
 We need you to evaluate, score, and prioritize a new/updated task based on the user's focus role, their deadlines, and their broader workload context.
@@ -379,7 +379,7 @@ Return your response inside the requested JSON Schema format. Ensure your wordin
         });
       }
 
-      const prompt = `You are a high-fidelity semantic parsing and parameter extraction engine for RapidFocus (focus role: ${role || "Student"}).
+      const prompt = `You are a high-fidelity semantic parsing and parameter extraction engine for RapidFocus (focus role: ${role || "Professional"}).
 Analyze the user's natural language voice input transcription and extract precise task setup details.
 Assume the current ISO time context is EXACTLY: ${new Date().toISOString()}. Use this reference to calculate absolute dates for relative language (such as "tomorrow", "Friday evening", "next week", "in 2 hours").
 
@@ -495,7 +495,7 @@ Return the JSON following the requested schema.`;
         return res.json({ headline, points });
       }
 
-      const prompt = `You are a high-fidelity diagnostic engine for RapidFocus (focus role: ${role || "Student"}).
+      const prompt = `You are a high-fidelity diagnostic engine for RapidFocus (focus role: ${role || "Professional"}).
 Analyze the user's workload state at current time ${new Date().toISOString()} for user "${userName || "User"}".
 
 Active Task List (Pending and Complete):
@@ -576,7 +576,7 @@ Provide your response strictly in the requested JSON structure.`;
   // Goals & Habits Weekly Feedback Insights Endpoint
   app.post("/api/goals/feedback", async (req: Request, res: Response) => {
     try {
-      const { goals = [], role = "Student", userName = "User" } = req.body;
+      const { goals = [], role = "Professional", userName = "User" } = req.body;
 
       // Smart dynamic analytical calculations for fallback & prompt context
       const totalItems = goals.length;
@@ -706,7 +706,7 @@ Strictly return your analysis in the requested JSON scheme.`;
   // Analytics Insight Endpoint
   app.post("/api/analytics/insight", async (req: Request, res: Response) => {
     try {
-      const { tasks = [], role = "Student", userName = "User" } = req.body;
+      const { tasks = [], role = "Professional", userName = "User" } = req.body;
 
       const completedTasks = tasks.filter((t: any) => t.completed);
       
@@ -923,7 +923,7 @@ Format as a strict JSON Scheme.`;
 
       const systemInstruction = `You are RapidFocus, a proactive productivity companion. You know the user's tasks, deadlines, and schedule. Help them plan their day, break down big tasks, suggest time blocks, and give motivational nudges. Be concise, warm, and direct.
 
-User Focus Role: ${role || "Student"}
+User Focus Role: ${role || "Professional"}
 User Name: ${userName || "User"}
 Current Time Context: ${new Date().toISOString()}
 

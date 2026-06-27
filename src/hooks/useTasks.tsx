@@ -103,7 +103,7 @@ export function useTasks() {
           deadline: taskData.deadline,
           priority: taskData.priority,
           category: taskData.category,
-          role: profile?.role || "Student",
+          role: profile?.role || "Professional",
           existingTasks: taskListContext.filter((t) => t.id !== taskId)
         })
       });
