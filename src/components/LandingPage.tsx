@@ -22,12 +22,13 @@ import {
   Moon
 } from "lucide-react";
 
-interface LoginProps {
+interface LandingPageProps {
   theme: "light" | "dark";
   toggleTheme: () => void;
+  onDemoMode: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ theme, toggleTheme }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, onDemoMode }) => {
   const { signInWithGoogle, signInWithDemo } = useAuth();
   
   // Auth Form State
@@ -64,7 +65,8 @@ export const Login: React.FC<LoginProps> = ({ theme, toggleTheme }) => {
   // Smooth scroll helper
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
-    const el = document.getElementById(id);
+    const targetId = id === "auth-section" ? "login-card" : id;
+    const el = document.getElementById(targetId);
     if (el) {
       el.scrollIntoView({ behavior: "smooth" });
     }
@@ -169,7 +171,7 @@ export const Login: React.FC<LoginProps> = ({ theme, toggleTheme }) => {
           </span>
         </div>
         <button 
-          onClick={handleDemoSignIn}
+          onClick={onDemoMode}
           className="hidden sm:flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-mono text-[11px] font-black uppercase tracking-wider bg-cyan-400/10 px-3 py-1 rounded-full border border-cyan-400/20 hover:bg-cyan-400/20 transition-all duration-150 cursor-pointer"
         >
           Try Demo →
@@ -329,13 +331,15 @@ export const Login: React.FC<LoginProps> = ({ theme, toggleTheme }) => {
           {/* CTA BUTTONS ROW */}
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full sm:w-auto">
             <button
-              onClick={() => scrollToSection("auth-section")}
+              onClick={() => {
+                document.getElementById('login-card')?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="w-full sm:w-auto px-8 py-4 bg-[#00D4FF] hover:bg-cyan-300 text-[#0A0F1E] font-black text-sm tracking-wider uppercase rounded-xl shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_25px_rgba(0,212,255,0.45)] transition duration-200 cursor-pointer"
             >
               Get Started Free →
             </button>
             <button
-              onClick={handleDemoSignIn}
+              onClick={onDemoMode}
               className="w-full sm:w-auto px-8 py-4 bg-transparent border border-cyan-400/30 hover:border-cyan-400 text-cyan-400 hover:text-white font-black text-sm tracking-wider uppercase rounded-xl transition duration-200 cursor-pointer"
             >
               Try Demo Mode
@@ -362,6 +366,7 @@ export const Login: React.FC<LoginProps> = ({ theme, toggleTheme }) => {
           <div className="absolute inset-0 bg-[#00D4FF]/5 rounded-3xl blur-[50px] pointer-events-none translate-y-6" />
           
           <div 
+            id="login-card"
             className="floating-hero w-full md:w-[420px] bg-[#111827] border border-[#00D4FF]/20 rounded-[20px] p-8 flex flex-col gap-5 relative z-10 text-left"
             style={{ boxShadow: "0 0 60px rgba(0,212,255,0.15)" }}
           >
