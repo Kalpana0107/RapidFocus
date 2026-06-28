@@ -278,8 +278,7 @@ We would like to acknowledge the following tools and communities that contribute
 ## 👩💻 Built By
 
 **Kalpana Naikodi**
-- 🎓 B.Tech AI & Data Science — VESIT Mumbai (2025-2029)
-- 💼 Full-stack developer | AI enthusiast
+
 - 🐙 GitHub: [@Kalpana0107](https://github.com/Kalpana0107)
 
 ---
