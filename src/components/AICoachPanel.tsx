@@ -207,13 +207,19 @@ interface AICoachPanelProps {
   onClose: () => void;
   tasks: Task[];
   profile: UserProfile;
+  panelWidth: number;
+  isResizing: boolean;
+  startResize: (e: React.MouseEvent) => void;
 }
 
 export const AICoachPanel: React.FC<AICoachPanelProps> = ({
   isOpen,
   onClose,
   tasks,
-  profile
+  profile,
+  panelWidth,
+  isResizing,
+  startResize
 }) => {
   const { user, isDemoMode } = useAuth();
 
@@ -312,8 +318,24 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 26, stiffness: 190 }}
-          className="fixed inset-y-0 right-0 w-full md:w-96 border-l border-white/10 bg-[#0E1528] flex flex-col z-50 h-screen shadow-2xl relative"
+          className="fixed inset-y-0 right-0 w-full bg-[#0E1528] border-l border-white/10 flex flex-col z-50 h-screen shadow-2xl overflow-hidden"
+          style={{
+            width: window.innerWidth < 768 ? '100vw' : `${panelWidth}px`
+          }}
         >
+          {/* Resize handle */}
+          <div 
+            className="hidden md:block absolute left-0 top-0 h-full w-1.5 cursor-ew-resize group z-50"
+            onMouseDown={startResize}
+          >
+            <div className="h-full w-full group-hover:bg-[#00D4FF]/40 transition-colors duration-200" />
+            <div className="absolute top-1/2 left-0 -translate-y-1/2 flex flex-col gap-1 pl-[1px]">
+              <div className="w-1 h-1 bg-gray-600 group-hover:bg-[#00D4FF] rounded-full transition-colors" />
+              <div className="w-1 h-1 bg-gray-600 group-hover:bg-[#00D4FF] rounded-full transition-colors" />
+              <div className="w-1 h-1 bg-gray-600 group-hover:bg-[#00D4FF] rounded-full transition-colors" />
+            </div>
+          </div>
+
           {/* Top Panel Brand Bar */}
           <div className="p-4 border-b border-white/5 bg-[#0D1425] flex items-center justify-between">
             <div className="flex items-center gap-2">

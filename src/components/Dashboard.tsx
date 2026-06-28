@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Onboarding } from "./Onboarding";
 import { TaskDashboard } from "./TaskDashboard";
@@ -34,6 +34,54 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, isDemo, onSignOut })
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const { tasks } = useTasks();
   const { goals } = useGoalsAndHabits();
+
+  const [panelWidth, setPanelWidth] = useState(() => {
+    const saved = localStorage.getItem('chatPanelWidth');
+    return saved ? parseInt(saved) : 360;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const startX = useRef(0);
+  const startWidth = useRef(360);
+
+  const startResize = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    startX.current = e.clientX;
+    startWidth.current = panelWidth;
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const diff = startX.current - moveEvent.clientX;
+      const newWidth = Math.min(
+        600, // MAX_WIDTH
+        Math.max(280, startWidth.current + diff) // MIN_WIDTH
+      );
+      setPanelWidth(newWidth);
+      localStorage.setItem('chatPanelWidth', newWidth.toString());
+    };
+    
+    const onMouseUp = () => {
+      setIsResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Dark/Light theme manager
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -274,7 +322,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, isDemo, onSignOut })
       </aside>
 
       {/* MAIN LAYOUT CANVAS */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div 
+        className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden"
+        style={{
+          marginRight: (!isMobile && isChatOpen) ? `${panelWidth}px` : '0px',
+          transition: isResizing 
+            ? 'none'  // no transition while dragging
+            : 'margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         
         {/* TOP STATUS HEADER BAR */}
         <header className="h-20 px-4 md:px-8 flex-shrink-0 flex items-center justify-between border-b border-white/5 bg-[#0D1425]/50 z-20">
@@ -454,6 +510,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, isDemo, onSignOut })
           onClose={() => setIsChatOpen(false)}
           tasks={tasks}
           profile={profile}
+          panelWidth={panelWidth}
+          isResizing={isResizing}
+          startResize={startResize}
         />
       )}
 

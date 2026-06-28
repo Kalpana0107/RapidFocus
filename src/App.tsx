@@ -7,7 +7,7 @@ import { SplashScreen } from "./components/SplashScreen";
 
 const AppContent: React.FC = () => {
   const { user, loading, signInWithDemo } = useAuth();
-  const [splash, setSplash] = useState(() => !sessionStorage.getItem("rapidfocus_splash_shown"));
+  const [splash, setSplash] = useState(true);
   const [demoMode, setDemoMode] = useState(() => localStorage.getItem("rapidfocus_is_demo") === "true");
 
   // Dark/Light theme manager

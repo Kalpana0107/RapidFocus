@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, ArrowRight, ArrowLeft, Loader2, X, AlertCircle, Calendar, Smile } from "lucide-react";
+import { Sparkles, ArrowRight, ArrowLeft, Loader2, X, AlertCircle, Calendar, Smile, Clock, Save, Play } from "lucide-react";
 import { Task } from "../types";
 import { db } from "../services/firebase";
 import { collection, addDoc } from "firebase/firestore";
@@ -15,6 +15,7 @@ interface AIScheduleQuizModalProps {
   userName: string;
   updateTask: (taskId: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => Promise<void>;
   onSuccess: () => void;
+  onStartTask?: (task: Task) => void;
 }
 
 type MoodType = "Excited" | "Good" | "Neutral" | "Tired" | "Anxious";
@@ -81,14 +82,24 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
   userName,
   updateTask,
   onSuccess,
+  onStartTask,
 }) => {
   const pendingTasks = tasks.filter((t) => !t.completed);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [taskMoods, setTaskMoods] = useState<Record<string, MoodType>>({});
   const [freeTime, setFreeTime] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSlowResponse, setIsSlowResponse] = useState(false);
+  const [freeTimeError, setFreeTimeError] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Structured schedule result from Step 2
+  const [generatedSchedule, setGeneratedSchedule] = useState<any>(null);
+
+  // Success Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   if (!isOpen) return null;
 
@@ -119,15 +130,23 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
 
   const handleGenerateSchedule = async () => {
     if (!freeTime.trim()) {
-      setError("Please input your free time slots.");
+      setFreeTimeError(true);
+      setError("Please enter your free time slots. Example: 9am-11am, 2pm-5pm");
       return;
     }
 
+    setFreeTimeError(false);
     setIsGenerating(true);
+    setIsSlowResponse(false);
     setError(null);
 
+    // Set a timer to catch slow response (>10 seconds)
+    const timer = setTimeout(() => {
+      setIsSlowResponse(true);
+    }, 10000);
+
     try {
-      // 1. Save mood data per task to Firestore (or local state)
+      // 1. Save mood data per task
       for (const task of pendingTasks) {
         const mood = taskMoods[task.id] || "Neutral";
         await updateTask(task.id, {
@@ -136,33 +155,73 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
         } as any);
       }
 
-      // 2. Call backend to generate the schedule with real Gemini API
-      const response = await fetch("/api/tasks/generate-schedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tasks: pendingTasks.map((t) => ({
-            id: t.id,
-            title: t.title,
-            category: t.category,
-            priority: t.priority,
-            deadline: t.deadline,
-            mood: taskMoods[t.id] || "Neutral",
-          })),
-          freeTime,
-          role: userRole,
-          userName: userName,
-        }),
-      });
+      // 2. Call backend schedule endpoint with automatic single-retry
+      let attempts = 0;
+      const maxAttempts = 2;
+      let responseData: any = null;
 
-      if (!response.ok) {
-        throw new Error("Failed to generate schedule from AI Coach");
+      while (attempts < maxAttempts) {
+        try {
+          const response = await fetch("/api/tasks/schedule", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tasks: pendingTasks.map((t) => ({
+                id: t.id,
+                title: t.title,
+                category: t.category,
+                priority: t.priority,
+                deadline: t.deadline,
+              })),
+              moods: taskMoods,
+              freeTime,
+              userName: userName,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`API returned HTTP status ${response.status}`);
+          }
+
+          const responseText = await response.text();
+          responseData = JSON.parse(responseText);
+          break; // Successful parse, exit loop
+        } catch (retryErr) {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            throw retryErr; // Bubble up on second failure
+          }
+          console.warn(`Attempt ${attempts} failed to generate schedule, retrying once...`);
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+        }
       }
 
-      const data = await response.json();
-      const generatedMarkdown = data.schedule;
+      clearTimeout(timer);
 
-      // 3. Save the schedule message to Firestore messages subcollection
+      // Save schedule object in state and transition to Step 3
+      setGeneratedSchedule(responseData);
+      setStep(3);
+
+      // Formulate markdown version of schedule to save as a chat message for Assistant Coach
+      const formattedMarkdown = `===================================
+📅 MY AI FOCUS SCHEDULE FOR TODAY
+===================================
+${responseData.overallTip || "Here is your custom timeline."}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🕒 TIME BLOCK | 📝 TASK DETAILS & COGNITIVE FIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${responseData.schedule
+  .map(
+    (item: any) =>
+      `${item.time} | ${item.taskTitle}\nCategory: General | Priority: High | Mood: ${
+        item.mood || "Neutral"
+      }\n💡 AI Tip: ${item.tip || "Keep up your momentum!"}`
+  )
+  .join("\n\n")}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+      // 3. Save the schedule message to Firestore/local messages subcollection
       if (isDemoMode || (user && user.uid === "demo-sandbox-uid")) {
         const localMsgStr = localStorage.getItem("rapidfocus_demo_messages");
         const currentMessages = localMsgStr ? JSON.parse(localMsgStr) : [];
@@ -171,7 +230,7 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
           {
             id: `m-${Date.now()}-coach`,
             role: "assistant",
-            content: generatedMarkdown,
+            content: formattedMarkdown,
             timestamp: new Date().toISOString(),
           },
         ];
@@ -179,23 +238,89 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
       } else if (user) {
         await addDoc(collection(db, "users", user.uid, "messages"), {
           role: "assistant",
-          content: generatedMarkdown,
+          content: formattedMarkdown,
           timestamp: new Date(),
         });
       }
 
-      // 4. Close modal, open Chat Assistant Panel, and show success
-      onSuccess();
     } catch (err: any) {
-      console.error("AI Schedule generation failure:", err);
+      console.error("AI Schedule generation failure after retry:", err);
+      clearTimeout(timer);
       setError("Unable to synthesize AI Schedule. Please check your network and try again.");
     } finally {
       setIsGenerating(false);
     }
   };
 
+  const handleStartFirstTask = () => {
+    if (pendingTasks.length > 0) {
+      const firstTask = pendingTasks[0];
+      if (onStartTask) {
+        onStartTask(firstTask);
+      }
+    }
+    onClose();
+  };
+
+  const handleSaveToNotes = async () => {
+    if (!generatedSchedule) return;
+
+    // Formulate a beautifully readable text schedule
+    const scheduleText = `===================================
+📅 MY AI FOCUS SCHEDULE FOR TODAY
+===================================
+TOTAL FOCUS TIME: ${generatedSchedule.totalFocusTime}
+
+💡 COACH RECOMMENDATION:
+"${generatedSchedule.overallTip}"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🕒 TIME BLOCK | 📝 TASK DETAILS & COGNITIVE FIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${generatedSchedule.schedule
+  .map(
+    (item: any) =>
+      `${item.time} (${item.duration}) | ${item.taskTitle}\nMood Context: ${item.mood}\nAI Tip: ${item.tip}`
+  )
+  .join("\n\n")}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(scheduleText);
+    } catch (e) {
+      console.warn("Clipboard save failed:", e);
+    }
+
+    // Save to local storage note storage
+    localStorage.setItem("rapidfocus_saved_schedule_notes", scheduleText);
+
+    // Save/append to the description (notes panel) of the first pending task
+    if (pendingTasks.length > 0) {
+      const firstTask = pendingTasks[0];
+      const newDescription = firstTask.description
+        ? `${firstTask.description}\n\n--- AI SCHEDULE NOTE ---\n${scheduleText}`
+        : `--- AI SCHEDULE NOTE ---\n${scheduleText}`;
+      try {
+        await updateTask(firstTask.id, { description: newDescription });
+      } catch (err) {
+        console.warn("Failed to append note to task description:", err);
+      }
+    }
+
+    setToastMessage("Saved schedule to Notes & Clipboard! 📋");
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
+  };
+
+  const handleCloseStep3 = () => {
+    onSuccess(); // Close modal, slide open the AI coach panel
+  };
+
   const progressPercentage = hasPendingTasks
-    ? ((currentTaskIndex + (step === 2 ? 1 : 0)) / pendingTasks.length) * 100
+    ? ((currentTaskIndex + (step === 2 ? 1 : step === 3 ? 2 : 0)) / pendingTasks.length) * 100
     : 0;
 
   return (
@@ -206,7 +331,7 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={isGenerating ? undefined : onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/85 backdrop-blur-md"
       />
 
       {/* Main Content Modal */}
@@ -216,6 +341,20 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         className="relative w-full max-w-xl bg-[#0D1425] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl z-10 overflow-hidden"
       >
+        {/* Toast Notification */}
+        <AnimatePresence>
+          {showToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-4 left-4 right-4 bg-emerald-500 text-[#0A0F1E] font-bold text-xs font-mono py-2 px-4 rounded-xl text-center shadow-lg z-50 flex items-center justify-center gap-1.5"
+            >
+              <span>{toastMessage}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Subtle Background Glows */}
         <div className="absolute top-0 right-0 -mr-24 -mt-24 w-48 h-48 bg-[#00D4FF]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-48 h-48 bg-[#0DFFD4]/5 rounded-full blur-3xl pointer-events-none" />
@@ -231,7 +370,11 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
                 AI Focus Planner
               </h3>
               <p className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">
-                {step === 1 ? "Step 1: Mood Diagnostics" : "Step 2: Available Capacity"}
+                {step === 1
+                  ? "Step 1: Mood Diagnostics"
+                  : step === 2
+                  ? "Step 2: Available Capacity"
+                  : "Step 3: Custom Focus Schedule"}
               </p>
             </div>
           </div>
@@ -247,7 +390,7 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
         </div>
 
         {/* Global Progress Bar */}
-        {hasPendingTasks && (
+        {hasPendingTasks && step !== 3 && (
           <div className="w-full bg-slate-800 h-1.5 rounded-full mb-6 overflow-hidden relative z-10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
             <motion.div
               initial={{ width: 0 }}
@@ -275,7 +418,7 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
               </div>
               <h4 className="text-md font-bold text-white">No active tasks found</h4>
               <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-                You don't have any pending tasks right now. Create some tasks in your dashboard first, then we can calibrate your personalized schedule!
+                You have no tasks to schedule! Add some tasks first, then use AI Schedule to plan your day. 📋
               </p>
               <button
                 onClick={onClose}
@@ -294,10 +437,12 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
               </div>
               <div className="space-y-2">
                 <h4 className="text-sm font-mono font-black text-white tracking-widest uppercase">
-                  Calibrating Mind & Time
+                  🤖 AI is building your personalized schedule...
                 </h4>
                 <p className="text-xs text-[#0DFFD4]/80 font-mono max-w-xs animate-pulse">
-                  Gemini is tailoring focus block intervals, matching task difficulties to your energy level, and organizing your timeline...
+                  {isSlowResponse
+                    ? "Taking longer than usual... still working on your schedule 🤖"
+                    : "Tailoring focus block intervals, matching task difficulties to your energy level, and organizing your timeline..."}
                 </p>
               </div>
             </div>
@@ -403,7 +548,7 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
                 </div>
               </motion.div>
             </AnimatePresence>
-          ) : (
+          ) : step === 2 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -419,22 +564,32 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
                     <h4 className="text-xs font-mono font-bold text-[#00D4FF] tracking-widest uppercase">
                       Mood Mapping Confirmed!
                     </h4>
-                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-303 mt-1 leading-relaxed">
                       All your {pendingTasks.length} pending tasks have been calibrated. Now we need your time parameters to organize your day.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-mono font-bold text-slate-300 tracking-wider uppercase flex items-center gap-1">
+                  <label className="text-xs font-mono font-bold text-slate-303 tracking-wider uppercase flex items-center gap-1">
                     What are your free time slots today?
                   </label>
                   <input
                     type="text"
                     value={freeTime}
-                    onChange={(e) => setFreeTime(e.target.value)}
+                    onChange={(e) => {
+                      setFreeTime(e.target.value);
+                      if (e.target.value.trim()) {
+                        setFreeTimeError(false);
+                        setError(null);
+                      }
+                    }}
                     placeholder="9am-11am, 3pm-6pm, 8pm-10pm"
-                    className="w-full bg-[#080D1A] border border-white/10 rounded-xl px-4 py-3.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[#00D4FF]/40 transition shadow-inner"
+                    className={`w-full bg-[#080D1A] border rounded-xl px-4 py-3.5 text-xs text-white placeholder-slate-600 focus:outline-none transition shadow-inner ${
+                      freeTimeError
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-white/10 focus:border-[#00D4FF]/40"
+                    }`}
                   />
                   <p className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
                     Separate multiple slots with commas
@@ -453,12 +608,104 @@ export const AIScheduleQuizModal: React.FC<AIScheduleQuizModalProps> = ({
 
                 <button
                   onClick={handleGenerateSchedule}
-                  disabled={!freeTime.trim()}
-                  className={`px-5 py-3 bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4] text-[#0A0F1E] hover:opacity-95 rounded-xl font-bold text-xs tracking-wider uppercase flex items-center gap-1.5 transition cursor-pointer shadow-lg shadow-[#00D4FF]/10 ${
-                    !freeTime.trim() ? "opacity-40 pointer-events-none bg-slate-800 text-slate-500 border border-white/5" : ""
-                  }`}
+                  className="px-5 py-3 bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4] text-[#0A0F1E] hover:opacity-95 rounded-xl font-bold text-xs tracking-wider uppercase flex items-center gap-1.5 transition cursor-pointer shadow-lg shadow-[#00D4FF]/10"
                 >
                   Generate My Schedule <Sparkles className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            /* Step 3: Beautiful schedule outcome view */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-5 flex flex-col justify-between flex-1"
+            >
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h4 className="text-sm md:text-md font-black text-white tracking-widest uppercase font-mono text-center flex items-center justify-center gap-1.5">
+                    📅 Your Personalized AI Focus Schedule
+                  </h4>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">TOTAL FOCUS TIME:</span>
+                    <span className="px-3 py-1 bg-[#00D4FF]/20 text-[#00D4FF] rounded-full text-xs font-mono font-extrabold shadow-[0_0_8px_rgba(0,212,255,0.1)]">
+                      {generatedSchedule?.totalFocusTime || "2 hours"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Motivational Quote Quote based on moods */}
+                <div className="p-4 bg-[#00D4FF]/5 border border-[#00D4FF]/20 rounded-2xl">
+                  <p className="text-[10px] font-mono font-bold text-[#00D4FF] uppercase tracking-wider mb-1">
+                    💡 Coach Recommendation
+                  </p>
+                  <p className="text-xs text-slate-300 italic leading-relaxed">
+                    "{generatedSchedule?.overallTip || "Maintain steady discipline and approach your milestones step-by-step!"}"
+                  </p>
+                </div>
+
+                {/* Timeline Items */}
+                <div className="space-y-3.5 max-h-[220px] overflow-y-auto pr-1">
+                  {generatedSchedule?.schedule?.map((item: any, idx: number) => {
+                    const isHighEnergy = item.mood === "Excited" || item.mood === "Good";
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-3.5 rounded-2xl border transition-all ${
+                          isHighEnergy
+                            ? "border-[#00D4FF]/40 bg-[#00D4FF]/5 shadow-[0_0_12px_rgba(0,212,255,0.08)]"
+                            : "border-slate-700/30 bg-[#0A0F1E]/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                            <Clock className={`w-3.5 h-3.5 ${isHighEnergy ? "text-[#00D4FF]" : "text-slate-400"}`} />
+                            <span className="font-mono">{item.time}</span>
+                            <span className="text-[10px] font-normal text-slate-500 font-mono">({item.duration})</span>
+                          </div>
+                          <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-md ${
+                            item.mood === "Excited" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10" :
+                            item.mood === "Good" ? "bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/10" :
+                            item.mood === "Tired" ? "bg-amber-500/10 text-amber-400 border border-amber-500/10" :
+                            item.mood === "Anxious" ? "bg-rose-500/10 text-rose-400 border border-rose-500/10" :
+                            "bg-slate-800 text-slate-400"
+                          }`}>
+                            {item.mood}
+                          </span>
+                        </div>
+                        <h5 className="text-xs font-bold text-white leading-snug">
+                          {item.taskTitle}
+                        </h5>
+                        {item.tip && (
+                          <p className="text-[11px] text-slate-400 mt-1 pl-2 border-l border-white/10 leading-relaxed font-sans">
+                            {item.tip}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 mt-4 border-t border-white/5">
+                <button
+                  onClick={handleStartFirstTask}
+                  className="w-full py-2.5 bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4] text-[#0A0F1E] hover:opacity-95 font-bold text-xs tracking-wider uppercase rounded-xl transition cursor-pointer shadow-lg shadow-[#00D4FF]/15 flex items-center justify-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" /> Start First Task
+                </button>
+                <button
+                  onClick={handleSaveToNotes}
+                  className="w-full py-2.5 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-xs tracking-wider uppercase rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" /> Save to Notes
+                </button>
+                <button
+                  onClick={handleCloseStep3}
+                  className="w-full py-2.5 border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white font-bold text-xs tracking-wider uppercase rounded-xl transition cursor-pointer"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>
