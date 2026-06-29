@@ -61,12 +61,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Cursor default hides for mouse layouts */
-@media (pointer: fine) {
-  * {
-    cursor: none !important;
-  }
-}
+/* Custom Cursor CSS removed */
 
 /* Interaction Effects */
 .clickable-tab {

@@ -36,7 +36,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(() => localStorage.getItem("rapidfocus_has_visited") !== "true");
   
   // Mobile menu control state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -77,6 +77,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
     setError(null);
     try {
       await signInWithGoogle();
+      localStorage.setItem("rapidfocus_has_visited", "true");
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Google Authentication was interrupted. Please try again.");
@@ -112,13 +113,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
+      localStorage.setItem("rapidfocus_has_visited", "true");
     } catch (err: any) {
       console.error(err);
       let friendlyMessage = err?.message || "Authentication failed.";
       if (err?.code === "auth/user-not-found" || err?.code === "auth/invalid-credential") {
         friendlyMessage = "Invalid email or password. Please try again or create an account.";
       } else if (err?.code === "auth/email-already-in-use") {
-        friendlyMessage = "This email is already in use. Try signing in instead.";
+        friendlyMessage = "You have already signed in. Please log in.";
       } else if (err?.code === "auth/weak-password") {
         friendlyMessage = "Password should be at least 6 characters.";
       } else if (err?.code === "auth/invalid-email") {

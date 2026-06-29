@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import { LandingPage } from "./components/LandingPage";
 import { Dashboard } from "./components/Dashboard";
-import { CustomCursor } from "./components/CustomCursor";
 import { SplashScreen } from "./components/SplashScreen";
 
 const AppContent: React.FC = () => {
@@ -75,7 +74,6 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <CustomCursor />
         <AppContent />
       </AuthProvider>
     </ThemeProvider>
