@@ -18,11 +18,11 @@ const ai = new GoogleGenAI({
 
 // Resilient helper to handle temporary model high-demand (503) or quota (429) by falling back automatically
 const MODELS = [
-  "gemini-3.5-flash",
-  "gemini-flash-latest",
-  "gemini-3.1-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
   "gemini-2.0-flash",
-  "gemini-2.0-flash-lite"
+  "gemini-2.5-flash",
+  "gemini-3.0-flash"
 ];
 
 async function generateContentWithFallback(options: {
@@ -41,7 +41,7 @@ async function generateContentWithFallback(options: {
       });
       return response;
     } catch (err: any) {
-      console.warn(`[Gemini RESILIENCY] Failed with model ${modelName}:`, err.message || err);
+      console.log(`[Gemini RESILIENCY] Model ${modelName} unavailable, trying fallback...`);
       lastError = err;
       // Brief delay before trying fallback model
       await new Promise((resolve) => setTimeout(resolve, 200));

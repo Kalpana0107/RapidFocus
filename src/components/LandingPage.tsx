@@ -117,6 +117,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
     } catch (err: any) {
       console.error(err);
       let friendlyMessage = err?.message || "Authentication failed.";
+      if (typeof friendlyMessage === 'string' && friendlyMessage.startsWith('Firebase:')) {
+        // Strip out the "Firebase:" prefix and the error code in parentheses
+        friendlyMessage = friendlyMessage.replace('Firebase:', '').replace(/\(auth\/.*\)\.?/, '').trim();
+      }
+      
       if (err?.code === "auth/user-not-found" || err?.code === "auth/invalid-credential") {
         friendlyMessage = "Invalid email or password. Please try again or create an account.";
       } else if (err?.code === "auth/email-already-in-use") {

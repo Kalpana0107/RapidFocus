@@ -334,6 +334,15 @@ export function StatsTab() {
     }
   }, [tasksLoading, profile]);
 
+  const [chartsReady, setChartsReady] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setChartsReady(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleDownload = (format: "csv" | "json") => {
     let completedTasksData = completedTasks;
     let totalTimeSpentSec = totalSecondsSpent;
@@ -373,7 +382,7 @@ export function StatsTab() {
   };
 
   return (
-    <div className="space-y-8" id="stats-tab-container">
+    <div className="space-y-8" id="stats-tab-container" style={{ minWidth: 0, overflow: 'hidden' }}>
       
       {/* Top Welcome Stats Header */}
       <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border p-6 rounded-3xl relative ${
@@ -531,35 +540,39 @@ export function StatsTab() {
                 </span>
               </div>
 
-              <div className="flex-1 min-h-0 w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={finalBarData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <XAxis 
-                      dataKey="name" 
-                      stroke={isDark ? "#475569" : "#94A3B8"} 
-                      fontSize={11} 
-                      tickLine={false} 
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      stroke={isDark ? "#475569" : "#94A3B8"} 
-                      fontSize={11} 
-                      tickLine={false} 
-                      axisLine={false}
-                      allowDecimals={false}
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: isDark ? "#0A0F1E" : "#FFFFFF", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E2E8F0", borderRadius: "8px", boxShadow: isDark ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                      itemStyle={{ color: isDark ? "#00D4FF" : "#0891B2", fontSize: "11px", fontFamily: "sans-serif" }}
-                      labelStyle={{ color: isDark ? "#fff" : "#0F172A", fontSize: "11px", fontFamily: "monospace" }}
-                    />
-                    <Bar 
-                      dataKey="Completions" 
-                      fill={isDark ? "#00D4FF" : "#0891B2"} 
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="flex-1 min-h-0 w-full relative" style={{ width: '100%', minHeight: '200px', minWidth: '0px' }}>
+                {chartsReady ? (
+                  <ResponsiveContainer width="100%" height={160} minHeight={160}>
+                    <BarChart data={finalBarData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                      <XAxis 
+                        dataKey="name" 
+                        stroke={isDark ? "#475569" : "#94A3B8"} 
+                        fontSize={11} 
+                        tickLine={false} 
+                        axisLine={false}
+                      />
+                      <YAxis 
+                        stroke={isDark ? "#475569" : "#94A3B8"} 
+                        fontSize={11} 
+                        tickLine={false} 
+                        axisLine={false}
+                        allowDecimals={false}
+                      />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: isDark ? "#0A0F1E" : "#FFFFFF", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E2E8F0", borderRadius: "8px", boxShadow: isDark ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                        itemStyle={{ color: isDark ? "#00D4FF" : "#0891B2", fontSize: "11px", fontFamily: "sans-serif" }}
+                        labelStyle={{ color: isDark ? "#fff" : "#0F172A", fontSize: "11px", fontFamily: "monospace" }}
+                      />
+                      <Bar 
+                        dataKey="Completions" 
+                        fill={isDark ? "#00D4FF" : "#0891B2"} 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: 160, background: isDark ? '#1a2235' : '#f1f5f9', borderRadius: 8, animation: 'shimmer 1.5s infinite' }}/>
+                )}
               </div>
             </div>
 
@@ -576,29 +589,33 @@ export function StatsTab() {
                 </span>
               </div>
 
-              <div className="flex-1 min-h-0 w-full flex items-center justify-center relative">
-                <ResponsiveContainer width="100%" height="80%">
-                  <PieChart>
-                    <Pie
-                      data={finalPieData}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {finalPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={isDark ? entry.color : (entry.name === 'On-Time' ? '#0891B2' : '#EF4444')} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(v) => `${v}%`}
-                      contentStyle={{ backgroundColor: isDark ? "#0A0F1E" : "#FFFFFF", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E2E8F0", borderRadius: "8px", boxShadow: isDark ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                      itemStyle={{ fontSize: "11px" }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex-1 min-h-0 w-full flex items-center justify-center relative" style={{ width: '100%', minHeight: '200px', minWidth: '0px' }}>
+                {chartsReady ? (
+                  <ResponsiveContainer width="100%" height={160} minHeight={160}>
+                    <PieChart>
+                      <Pie
+                        data={finalPieData}
+                        cx="50%"
+                        cy="45%"
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={4}
+                        dataKey="value"
+                      >
+                        {finalPieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={isDark ? entry.color : (entry.name === 'On-Time' ? '#0891B2' : '#EF4444')} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(v) => `${v}%`}
+                        contentStyle={{ backgroundColor: isDark ? "#0A0F1E" : "#FFFFFF", borderColor: isDark ? "rgba(255,255,255,0.08)" : "#E2E8F0", borderRadius: "8px", boxShadow: isDark ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
+                        itemStyle={{ fontSize: "11px" }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: 160, background: isDark ? '#1a2235' : '#f1f5f9', borderRadius: 8, animation: 'shimmer 1.5s infinite', width: '100%' }}/>
+                )}
                 
                 {/* Center metric label block */}
                 <div className="absolute top-[40%] translate-y-[-50%] flex flex-col items-center">
