@@ -131,7 +131,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-slate-100 font-sans overflow-x-hidden selection:bg-[#00D4FF]/30 selection:text-white">
+    <div className={`min-h-screen font-sans overflow-x-hidden ${theme === 'light' ? 'bg-[#F8FAFF] text-[#0F172A] selection:bg-[#0891B2]/30 selection:text-white' : 'bg-[#0A0F1E] text-slate-100 selection:bg-[#00D4FF]/30 selection:text-white'}`}>
       {/* Inline styles for custom premium elements and animations */}
       <style>{`
         @keyframes float {
@@ -160,19 +160,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
       {/* ====================================================================== */}
       {/* 1. TOP ANNOUNCEMENT BAR */}
       {/* ====================================================================== */}
-      <div className="w-full bg-[#030712] border-b border-white/5 py-2 px-4 flex items-center justify-between gap-3 text-xs relative z-50">
+      <div className={`w-full border-b py-2 px-4 flex items-center justify-between gap-3 text-xs relative z-50 ${theme === 'light' ? 'bg-[#FFFFFF] border-[#E2E8F0]' : 'bg-[#030712] border-white/5'}`}>
         <div className="flex items-center gap-2.5 mx-auto sm:mx-0">
           <span className="relative flex h-2 w-2">
             <span className="live-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="text-slate-400 font-medium">
-            🏆 Built for <span className="text-white font-bold">Vibe2Ship Hackathon 2026</span>
+          <span className={`font-medium ${theme === 'light' ? 'text-[#475569]' : 'text-slate-400'}`}>
+            🏆 Built for <span className={`font-bold ${theme === 'light' ? 'text-[#0F172A]' : 'text-white'}`}>Vibe2Ship Hackathon 2026</span>
           </span>
         </div>
         <button 
           onClick={onDemoMode}
-          className="hidden sm:flex items-center gap-1 text-cyan-400 hover:text-cyan-300 font-mono text-[11px] font-black uppercase tracking-wider bg-cyan-400/10 px-3 py-1 rounded-full border border-cyan-400/20 hover:bg-cyan-400/20 transition-all duration-150 cursor-pointer"
+          className={`hidden sm:flex items-center gap-1 font-mono text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border transition-all duration-150 cursor-pointer ${theme === 'light' ? 'text-[#0891B2] hover:text-[#065F7A] bg-[#0891B2]/10 border-[#0891B2]/20 hover:bg-[#0891B2]/20' : 'text-cyan-400 hover:text-cyan-300 bg-cyan-400/10 border-cyan-400/20 hover:bg-cyan-400/20'}`}
         >
           Try Demo →
         </button>
@@ -181,35 +181,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
       {/* ====================================================================== */}
       {/* 2. STICKY NAVBAR */}
       {/* ====================================================================== */}
-      <header className="sticky top-0 z-40 w-full bg-[#0A0F1E]/80 backdrop-blur-md border-b border-[#00D4FF]/15 h-16 flex items-center transition-all duration-200">
+      <header className={`sticky top-0 z-40 w-full backdrop-blur-md border-b h-16 flex items-center transition-all duration-200 ${theme === 'light' ? 'bg-[#FFFFFF]/90 border-[#E2E8F0]' : 'bg-[#0A0F1E]/80 border-[#00D4FF]/15'}`}>
         <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#00D4FF] to-[#0DFFD4] rounded-lg flex items-center justify-center font-black text-[#0A0F1E] text-lg shadow-[0_0_15px_rgba(0,212,255,0.35)]">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-black text-lg ${theme === 'light' ? 'bg-[#0891B2] text-white shadow-[0_0_15px_rgba(8,145,178,0.35)]' : 'bg-gradient-to-br from-[#00D4FF] to-[#0DFFD4] text-[#0A0F1E] shadow-[0_0_15px_rgba(0,212,255,0.35)]'}`}>
               RF
             </div>
-            <span className="font-extrabold text-xl tracking-tight text-white">
-              Rapid<span className="text-[#00D4FF]">Focus</span>
+            <span className={`font-extrabold text-xl tracking-tight ${theme === 'light' ? 'text-[#0F172A]' : 'text-white'}`}>
+              Rapid<span className={theme === 'light' ? 'text-[#0891B2]' : 'text-[#00D4FF]'}>Focus</span>
             </span>
           </div>
 
           {/* Desktop Navigation Links (15px font) */}
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-medium text-slate-300">
+          <nav className={`hidden md:flex items-center gap-8 text-[15px] font-medium ${theme === 'light' ? 'text-[#475569]' : 'text-slate-300'}`}>
             <button 
               onClick={() => scrollToSection("features")} 
-              className="hover:text-white transition duration-150 cursor-pointer text-left"
+              className={`transition duration-150 cursor-pointer text-left ${theme === 'light' ? 'hover:text-[#0F172A]' : 'hover:text-white'}`}
             >
               Features
             </button>
             <button 
               onClick={() => scrollToSection("how-it-works")} 
-              className="hover:text-white transition duration-150 cursor-pointer text-left"
+              className={`transition duration-150 cursor-pointer text-left ${theme === 'light' ? 'hover:text-[#0F172A]' : 'hover:text-white'}`}
             >
               How It Works
             </button>
             <button 
               onClick={() => scrollToSection("footer")} 
-              className="hover:text-white transition duration-150 cursor-pointer text-left"
+              className={`transition duration-150 cursor-pointer text-left ${theme === 'light' ? 'hover:text-[#0F172A]' : 'hover:text-white'}`}
             >
               About
             </button>
@@ -217,7 +217,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
               href="https://github.com" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-white transition duration-150 flex items-center gap-1.5"
+              className={`transition duration-150 flex items-center gap-1.5 ${theme === 'light' ? 'hover:text-[#0F172A]' : 'hover:text-white'}`}
             >
               <Github className="w-4.5 h-4.5" />
             </a>
@@ -228,21 +228,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-slate-400 hover:text-white transition duration-150 cursor-pointer bg-slate-900/50 border border-white/5 rounded-xl flex items-center justify-center hover:bg-slate-900"
+              className={`p-2 transition duration-150 cursor-pointer border rounded-xl flex items-center justify-center ${theme === 'light' ? 'text-[#64748B] hover:text-[#0F172A] bg-[#F1F5F9] border-[#CBD5E1] hover:bg-[#E2E8F0]' : 'text-slate-400 hover:text-white bg-slate-900/50 border-white/5 hover:bg-slate-900'}`}
               title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
             >
-              {theme === "light" ? <Moon className="w-4 h-4 text-[#00D4FF]" /> : <Sun className="w-4 h-4 text-amber-400" />}
+              {theme === "light" ? <Moon className="w-4 h-4 text-[#0891B2]" /> : <Sun className="w-4 h-4 text-amber-400" />}
             </button>
 
             <button
               onClick={() => scrollToSection("auth-section")}
-              className="px-4 py-2 text-sm font-bold text-cyan-400 hover:text-white border border-cyan-400/30 hover:border-cyan-400 rounded-xl transition duration-150 cursor-pointer"
+              className={`px-4 py-2 text-sm font-bold border rounded-xl transition duration-150 cursor-pointer ${theme === 'light' ? 'text-[#0891B2] border-[#0891B2]/30 hover:border-[#0891B2] hover:bg-[#F0F9FF]' : 'text-cyan-400 hover:text-white border-cyan-400/30 hover:border-cyan-400'}`}
             >
               Sign In
             </button>
             <button
               onClick={() => scrollToSection("auth-section")}
-              className="px-5 py-2 text-sm font-black text-[#0A0F1E] bg-[#00D4FF] hover:bg-cyan-300 rounded-xl transition shadow-[0_0_15px_rgba(0,212,255,0.25)] hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] flex items-center gap-1 cursor-pointer"
+              className={`px-5 py-2 text-sm font-black rounded-xl transition flex items-center gap-1 cursor-pointer ${theme === 'light' ? 'text-white bg-[#0891B2] hover:bg-teal-600 shadow-[0_0_15px_rgba(8,145,178,0.25)] hover:shadow-[0_0_20px_rgba(8,145,178,0.4)]' : 'text-[#0A0F1E] bg-[#00D4FF] hover:bg-cyan-300 shadow-[0_0_15px_rgba(0,212,255,0.25)] hover:shadow-[0_0_20px_rgba(0,212,255,0.4)]'}`}
             >
               Get Started →
             </button>
@@ -251,7 +251,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
           {/* Mobile Menu Button */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-300 hover:text-white cursor-pointer"
+            className={`md:hidden p-2 cursor-pointer ${theme === 'light' ? 'text-[#64748B] hover:text-[#0F172A]' : 'text-slate-300 hover:text-white'}`}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -265,31 +265,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ theme, toggleTheme, on
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden w-full bg-[#0D1425] border-b border-[#00D4FF]/10"
+            className={`md:hidden w-full border-b ${theme === 'light' ? 'bg-[#FFFFFF] border-[#E2E8F0]' : 'bg-[#0D1425] border-[#00D4FF]/10'}`}
           >
             <div className="px-6 py-6 flex flex-col gap-5 text-base font-semibold">
-              <button onClick={() => scrollToSection("features")} className="text-left text-slate-300 hover:text-white">Features</button>
-              <button onClick={() => scrollToSection("how-it-works")} className="text-left text-slate-300 hover:text-white">How It Works</button>
-              <button onClick={() => scrollToSection("footer")} className="text-left text-slate-300 hover:text-white">About</button>
-              <div className="h-[1px] bg-white/5 w-full my-1" />
+              <button onClick={() => scrollToSection("features")} className={`text-left ${theme === 'light' ? 'text-[#475569] hover:text-[#0F172A]' : 'text-slate-300 hover:text-white'}`}>Features</button>
+              <button onClick={() => scrollToSection("how-it-works")} className={`text-left ${theme === 'light' ? 'text-[#475569] hover:text-[#0F172A]' : 'text-slate-300 hover:text-white'}`}>How It Works</button>
+              <button onClick={() => scrollToSection("footer")} className={`text-left ${theme === 'light' ? 'text-[#475569] hover:text-[#0F172A]' : 'text-slate-300 hover:text-white'}`}>About</button>
+              <div className={`h-[1px] w-full my-1 ${theme === 'light' ? 'bg-[#E2E8F0]' : 'bg-white/5'}`} />
               <div className="grid grid-cols-[1fr_auto] gap-3 items-center">
                 <button 
                   onClick={() => scrollToSection("auth-section")} 
-                  className="px-4 py-2.5 text-center text-sm font-bold text-cyan-400 border border-cyan-400/30 rounded-xl"
+                  className={`px-4 py-2.5 text-center text-sm font-bold border rounded-xl ${theme === 'light' ? 'text-[#0891B2] border-[#0891B2]/30' : 'text-cyan-400 border-cyan-400/30'}`}
                 >
                   Sign In
                 </button>
                 <button
                   onClick={toggleTheme}
-                  className="p-2.5 text-slate-400 hover:text-white transition duration-150 cursor-pointer bg-slate-900 border border-white/5 rounded-xl flex items-center justify-center"
+                  className={`p-2.5 transition duration-150 cursor-pointer border rounded-xl flex items-center justify-center ${theme === 'light' ? 'text-[#64748B] hover:text-[#0F172A] bg-[#F1F5F9] border-[#CBD5E1]' : 'text-slate-400 hover:text-white bg-slate-900 border-white/5'}`}
                   title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
                 >
-                  {theme === "light" ? <Moon className="w-5 h-5 text-[#00D4FF]" /> : <Sun className="w-5 h-5 text-amber-400" />}
+                  {theme === "light" ? <Moon className="w-5 h-5 text-[#0891B2]" /> : <Sun className="w-5 h-5 text-amber-400" />}
                 </button>
               </div>
               <button 
                 onClick={() => scrollToSection("auth-section")} 
-                className="px-4 py-2.5 text-center text-sm font-black text-[#0A0F1E] bg-[#00D4FF] rounded-xl"
+                className={`px-4 py-2.5 text-center text-sm font-black rounded-xl ${theme === 'light' ? 'text-white bg-[#0891B2]' : 'text-[#0A0F1E] bg-[#00D4FF]'}`}
               >
                 Get Started →
               </button>

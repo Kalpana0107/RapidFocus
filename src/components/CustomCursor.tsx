@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTheme } from "../hooks/useTheme";
 
 export const CustomCursor: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const cursor = cursorRef.current;
@@ -78,11 +80,11 @@ export const CustomCursor: React.FC = () => {
           cx="0"
           cy="0"
           r="4.5"
-          fill={isHovered ? "#FFD700" : "#00D4FF"}
+          fill={isHovered ? (isDark ? "#FFD700" : "#F59E0B") : (isDark ? "#00D4FF" : "#0891B2")}
           style={{
             filter: isHovered 
-              ? "drop-shadow(0 0 10px #FFD700) drop-shadow(0 0 4px #FFD700)" 
-              : "drop-shadow(0 0 6px #00D4FF) drop-shadow(0 0 2px #00D4FF)",
+              ? (isDark ? "drop-shadow(0 0 10px #FFD700) drop-shadow(0 0 4px #FFD700)" : "drop-shadow(0 0 6px #F59E0B)")
+              : (isDark ? "drop-shadow(0 0 6px #00D4FF) drop-shadow(0 0 2px #00D4FF)" : "drop-shadow(0 0 4px #0891B2)"),
             transition: "fill 0.15s ease, filter 0.15s ease",
           }}
         />

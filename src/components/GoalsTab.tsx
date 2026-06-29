@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useGoalsAndHabits } from "../hooks/useGoalsAndHabits";
 import { useAuth } from "../hooks/useAuth";
+import { useTheme } from "../hooks/useTheme";
 import { 
   Award, 
   Flame, 
@@ -52,6 +53,7 @@ function getCurrentWeekDates() {
 
 export function GoalsTab() {
   const { profile } = useAuth();
+  const { isDark } = useTheme();
   const { 
     goals, 
     loading, 
@@ -118,31 +120,35 @@ export function GoalsTab() {
     <div className="space-y-8" id="goals-tab-container">
       
       {/* Top Banner introducing Goal Strategy and Dynamic Duolingo Streaks */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-[#0D1425]/70 border border-white/5 p-6 rounded-3xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 bg-[#00D4FF]/5 rounded-full blur-xl" />
+      <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border p-6 rounded-3xl relative overflow-hidden ${isDark ? 'bg-[#0D1425]/70 border-white/5' : 'bg-white border-[#E2E8F0] shadow-sm'}`}>
+        <div className={`absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full blur-xl ${isDark ? 'bg-[#00D4FF]/5' : 'bg-[#0891B2]/10'}`} />
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#00D4FF]/10 text-[#00D4FF] rounded-2xl border border-[#00D4FF]/10">
+          <div className={`p-3 rounded-2xl border ${isDark ? 'bg-[#00D4FF]/10 text-[#00D4FF] border-[#00D4FF]/10' : 'bg-[#F0F9FF] text-[#0891B2] border-[#BAE6FD]'}`}>
             <Award className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white font-sans tracking-tight">Focus Milestones & Habits</h3>
-            <p className="text-xs text-slate-400 mt-1 max-w-lg leading-relaxed">
+            <h3 className={`text-lg font-bold font-sans tracking-tight ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>Focus Milestones & Habits</h3>
+            <p className={`text-xs mt-1 max-w-lg leading-relaxed ${isDark ? 'text-slate-400' : 'text-[#475569]'}`}>
               Define target weekly goals or daily habits. Tick off days in the Mon-Sun tracker to build active streaks and receive personalized coaching advice from Gemini.
             </p>
           </div>
         </div>
 
         {/* Global Duo-style Streak Counter */}
-        <div className="flex items-center gap-3 bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/25 px-5 py-3 rounded-2xl self-stretch md:self-auto justify-center">
+        <div className={`flex items-center gap-3 border px-5 py-3 rounded-2xl self-stretch md:self-auto justify-center ${
+          isDark 
+            ? 'bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/25' 
+            : 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-200 shadow-sm'
+        }`}>
           <div className="relative">
-            <Flame className="w-7 h-7 text-orange-500 fill-current animate-bounce" />
-            <div className="absolute inset-0 bg-orange-500/15 rounded-full filter blur-md animate-pulse" />
+            <Flame className={`w-7 h-7 fill-current animate-bounce ${isDark ? 'text-orange-500' : 'text-orange-600'}`} />
+            <div className={`absolute inset-0 rounded-full filter blur-md animate-pulse ${isDark ? 'bg-orange-500/15' : 'bg-orange-500/20'}`} />
           </div>
           <div className="text-left">
-            <div className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-widest leading-none">
+            <div className={`text-[10px] font-mono font-bold uppercase tracking-widest leading-none ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
               HERO STREAK
             </div>
-            <div className="text-lg font-mono font-black text-orange-400 leading-none mt-1">
+            <div className={`text-lg font-mono font-black leading-none mt-1 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
               {globalStreak} DAYS
             </div>
           </div>
@@ -156,13 +162,17 @@ export function GoalsTab() {
           
           {/* Header Actions */}
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-mono font-bold text-slate-400 tracking-widest uppercase">
+            <h4 className={`text-xs font-mono font-bold tracking-widest uppercase ${isDark ? 'text-slate-400' : 'text-[#0891B2]'}`}>
               ACTIVE ROUTINES ({goals.length})
             </h4>
             
             <button
               onClick={() => setIsAdding(!isAdding)}
-              className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4] text-[#0A0F1E] font-sans font-bold text-xs rounded-xl flex items-center gap-1.5 hover:shadow-[0_0_20px_rgba(0,212,255,0.25)] transition duration-300 cursor-pointer"
+              className={`px-4 py-2 font-sans font-bold text-xs rounded-xl flex items-center gap-1.5 transition duration-300 cursor-pointer ${
+                isDark 
+                  ? 'bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4] text-[#0A0F1E] hover:shadow-[0_0_20px_rgba(0,212,255,0.25)]' 
+                  : 'bg-gradient-to-r from-[#0891B2] to-[#0284C7] text-white hover:shadow-md'
+              }`}
             >
               <Plus className="w-4 h-4" />
               ADD ROUTINE
@@ -180,15 +190,15 @@ export function GoalsTab() {
               >
                 <form 
                   onSubmit={handleAddNew}
-                  className="bg-[#0D1425]/40 border border-[#00D4FF]/20 p-5 rounded-3xl space-y-4"
+                  className={`border p-5 rounded-3xl space-y-4 ${isDark ? 'bg-[#0D1425]/40 border-[#00D4FF]/20' : 'bg-[#F1F5F9] border-[#CBD5E1]'}`}
                 >
-                  <h5 className="text-xs font-mono font-bold text-[#00D4FF] tracking-wider uppercase">
+                  <h5 className={`text-xs font-mono font-bold tracking-wider uppercase ${isDark ? 'text-[#00D4FF]' : 'text-[#0891B2]'}`}>
                     Initialize New Routine
                   </h5>
 
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     <div className="md:col-span-6">
-                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+                      <label className={`block text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                         Routine Label
                       </label>
                       <input
@@ -196,18 +206,26 @@ export function GoalsTab() {
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
                         placeholder="e.g. Read research paper, Hit gym, Code 2 hours"
-                        className="w-full bg-[#0A0F1E] border border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#00D4FF]/40"
+                        className={`w-full border rounded-xl px-4 py-2.5 text-xs focus:outline-none ${
+                          isDark 
+                            ? 'bg-[#0A0F1E] border-white/5 text-slate-200 focus:border-[#00D4FF]/40' 
+                            : 'bg-white border-[#CBD5E1] text-[#0F172A] focus:border-[#0891B2]'
+                        }`}
                       />
                     </div>
 
                     <div className="md:col-span-3">
-                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+                      <label className={`block text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                         Routine Type
                       </label>
                       <select
                         value={newType}
                         onChange={(e) => setNewType(e.target.value as "goal" | "habit")}
-                        className="w-full bg-[#0A0F1E] border border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-350 focus:outline-none"
+                        className={`w-full border rounded-xl px-4 py-2.5 text-xs focus:outline-none ${
+                          isDark 
+                            ? 'bg-[#0A0F1E] border-white/5 text-slate-350' 
+                            : 'bg-white border-[#CBD5E1] text-[#0F172A]'
+                        }`}
                       >
                         <option value="goal">Weekly Goal</option>
                         <option value="habit">Daily Habit</option>
@@ -217,13 +235,17 @@ export function GoalsTab() {
                     <div className="md:col-span-3">
                       {newType === "goal" ? (
                         <>
-                          <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+                          <label className={`block text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                             Target / Week
                           </label>
                           <select
                             value={targetDays}
                             onChange={(e) => setTargetDays(Number(e.target.value))}
-                            className="w-full bg-[#0A0F1E] border border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-350 focus:outline-none"
+                            className={`w-full border rounded-xl px-4 py-2.5 text-xs focus:outline-none ${
+                              isDark 
+                                ? 'bg-[#0A0F1E] border-white/5 text-slate-350' 
+                                : 'bg-white border-[#CBD5E1] text-[#0F172A]'
+                            }`}
                           >
                             {[1, 2, 3, 4, 5, 6, 7].map(n => (
                               <option key={n} value={n}>{n} days</option>
@@ -232,14 +254,18 @@ export function GoalsTab() {
                         </>
                       ) : (
                         <>
-                          <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-1">
+                          <label className={`block text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                             Target / Week
                           </label>
                           <input
                             type="text"
                             disabled
                             value="Daily (7)"
-                            className="w-full bg-[#0A0F1E]/50 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-slate-500 focus:outline-none cursor-not-allowed"
+                            className={`w-full border rounded-xl px-4 py-2.5 text-xs focus:outline-none cursor-not-allowed ${
+                              isDark 
+                                ? 'bg-[#0A0F1E]/50 border-white/5 text-slate-500' 
+                                : 'bg-[#E2E8F0] border-[#CBD5E1] text-[#94A3B8]'
+                            }`}
                           />
                         </>
                       )}
@@ -247,7 +273,7 @@ export function GoalsTab() {
                   </div>
 
                   {errorMessage && (
-                    <p className="text-red-400 font-mono text-[11px] flex items-center gap-1.5 pt-1">
+                    <p className="text-red-500 font-mono text-[11px] flex items-center gap-1.5 pt-1">
                       <AlertCircle className="w-3.5 h-3.5" /> {errorMessage}
                     </p>
                   )}
@@ -256,13 +282,17 @@ export function GoalsTab() {
                     <button
                       type="button"
                       onClick={() => setIsAdding(false)}
-                      className="px-4 py-2 text-slate-400 hover:text-white transition text-xs font-mono"
+                      className={`px-4 py-2 transition text-xs font-mono ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#64748B] hover:text-[#0F172A]'}`}
                     >
                       CANCEL
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 bg-white/10 text-white hover:bg-white/15 transition rounded-xl text-xs font-sans font-bold"
+                      className={`px-5 py-2 transition rounded-xl text-xs font-sans font-bold ${
+                        isDark 
+                          ? 'bg-white/10 text-white hover:bg-white/15' 
+                          : 'bg-[#0891B2] text-white hover:bg-[#0E7490]'
+                      }`}
                     >
                       ADD ROUTINE
                     </button>
@@ -274,14 +304,14 @@ export function GoalsTab() {
 
           {/* Loader or Empty State */}
           {loading ? (
-            <div className="py-12 text-center text-slate-400 font-mono text-xs animate-pulse">
+            <div className={`py-12 text-center font-mono text-xs animate-pulse ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
               SYNCING ACTIVE ROUTINES WITH FIRESTORE...
             </div>
           ) : goals.length === 0 ? (
-            <div className="bg-[#0D1425]/20 border border-white/5 rounded-3xl p-12 text-center">
-              <Calendar className="w-10 h-10 text-slate-650 mx-auto mb-4" />
-              <h5 className="text-sm font-semibold text-slate-300">Your Routine Board is Clear</h5>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto mt-2 leading-relaxed">
+            <div className={`border rounded-3xl p-12 text-center ${isDark ? 'bg-[#0D1425]/20 border-white/5' : 'bg-[#F1F5F9] border-[#E2E8F0]'}`}>
+              <Calendar className={`w-10 h-10 mx-auto mb-4 ${isDark ? 'text-slate-650' : 'text-[#94A3B8]'}`} />
+              <h5 className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-[#0F172A]'}`}>Your Routine Board is Clear</h5>
+              <p className={`text-xs max-w-sm mx-auto mt-2 leading-relaxed ${isDark ? 'text-slate-500' : 'text-[#475569]'}`}>
                 Add a weekly goal (e.g. read, exercise) or daily habit to unlock active tracking.
               </p>
             </div>
@@ -293,22 +323,30 @@ export function GoalsTab() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                    <h5 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Daily Habits</h5>
+                    <h5 className={`text-[10px] font-mono uppercase tracking-widest font-black ${isDark ? 'text-slate-500' : 'text-[#64748B]'}`}>Daily Habits</h5>
                   </div>
                   
                   {dailyHabitsList.map((habit) => (
                     <div 
                       key={habit.id}
-                      className="bg-[#0D1425]/45 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 task-card-hover hover:border-[#00D4FF]/10"
+                      className={`border rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 task-card-hover ${
+                        isDark 
+                          ? 'bg-[#0D1425]/45 border-white/5 hover:border-[#00D4FF]/10' 
+                          : 'bg-white border-[#E2E8F0] shadow-sm hover:border-[#0891B2]'
+                      }`}
                     >
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white font-sans">{habit.title}</span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500/10 text-orange-400 font-mono text-[9px] rounded-lg border border-orange-500/20 font-black">
+                          <span className={`text-sm font-bold font-sans ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>{habit.title}</span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[9px] rounded-lg border font-black ${
+                            isDark 
+                              ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' 
+                              : 'bg-orange-50 text-orange-600 border-orange-200'
+                          }`}>
                             <Flame className="w-3 h-3 fill-current" /> {habit.streak || 0}D STREAK
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">
+                        <p className={`text-[10px] font-mono uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
                           LAST CHECK-IN: {habit.completedDays && habit.completedDays.length > 0 ? habit.completedDays[habit.completedDays.length - 1] : "NEVER"}
                         </p>
                       </div>
@@ -317,17 +355,27 @@ export function GoalsTab() {
                       <div className="flex items-center gap-2 self-stretch md:self-auto justify-between overflow-x-auto py-1">
                         {weekDays.map((day) => {
                           const completed = isDateCompleted(habit.id, day.dateStr);
+                          
+                          let btnClass = "";
+                          if (completed) {
+                            btnClass = isDark 
+                              ? "bg-gradient-to-b from-orange-500/20 to-red-500/20 border-orange-500/40 text-orange-400 font-bold"
+                              : "bg-orange-500 border-orange-600 text-white font-bold shadow-sm";
+                          } else if (day.isToday) {
+                            btnClass = isDark 
+                              ? "bg-[#00D4FF]/5 border-[#00D4FF]/30 text-[#00D4FF]"
+                              : "bg-[#F0F9FF] border-[#BAE6FD] text-[#0891B2]";
+                          } else {
+                            btnClass = isDark 
+                              ? "bg-black/20 border-white/5 text-slate-400 hover:border-slate-700"
+                              : "bg-[#F8FAFF] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]";
+                          }
+
                           return (
                             <button
                               key={day.dateStr}
                               onClick={() => toggleGoalDate(habit.id, day.dateStr)}
-                              className={`w-9 h-11 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer border select-none ${
-                                completed
-                                  ? "bg-gradient-to-b from-orange-500/20 to-red-500/20 border-orange-500/40 text-orange-400 font-bold"
-                                  : day.isToday
-                                    ? "bg-[#00D4FF]/5 border-[#00D4FF]/30 text-[#00D4FF]"
-                                    : "bg-black/20 border-white/5 text-slate-400 hover:border-slate-700"
-                              }`}
+                              className={`w-9 h-11 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer border select-none ${btnClass}`}
                               title={`${day.name} (${day.dateStr}) - Click to toggle completion`}
                             >
                               <span className="text-[8px] font-mono leading-none tracking-tight uppercase">
@@ -343,7 +391,11 @@ export function GoalsTab() {
                         {/* Delete Control */}
                         <button
                           onClick={() => deleteGoal(habit.id)}
-                          className="p-2 text-slate-600 hover:text-red-400 rounded-lg hover:bg-white/5 transition ml-2 cursor-pointer"
+                          className={`p-2 rounded-lg transition ml-2 cursor-pointer ${
+                            isDark 
+                              ? 'text-slate-600 hover:text-red-400 hover:bg-white/5' 
+                              : 'text-[#94A3B8] hover:text-red-500 hover:bg-red-50'
+                          }`}
                           title="Delete Habit"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -358,8 +410,8 @@ export function GoalsTab() {
               {weeklyGoalsList.length > 0 && (
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />
-                    <h5 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Weekly Goals</h5>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-[#00D4FF]' : 'bg-[#0891B2]'}`} />
+                    <h5 className={`text-[10px] font-mono uppercase tracking-widest font-black ${isDark ? 'text-slate-500' : 'text-[#64748B]'}`}>Weekly Goals</h5>
                   </div>
 
                   {weeklyGoalsList.map((goal) => {
@@ -371,15 +423,19 @@ export function GoalsTab() {
                     return (
                       <div 
                         key={goal.id}
-                        className="bg-[#0D1425]/45 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 task-card-hover hover:border-[#00D4FF]/10"
+                        className={`border rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 task-card-hover ${
+                          isDark 
+                            ? 'bg-[#0D1425]/45 border-white/5 hover:border-[#00D4FF]/10' 
+                            : 'bg-white border-[#E2E8F0] shadow-sm hover:border-[#0891B2]'
+                        }`}
                       >
                         <div className="space-y-2 flex-grow max-w-sm">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-bold text-white font-sans">{goal.title}</span>
+                            <span className={`text-sm font-bold font-sans ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>{goal.title}</span>
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 font-mono text-[9px] rounded-lg border font-black ${
                               isFullySucceeded 
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                                : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                ? (isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-200") 
+                                : (isDark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-[#0891B2] border-blue-200")
                             }`}>
                               {completedThisWeek} / {target} DAYS
                             </span>
@@ -387,18 +443,18 @@ export function GoalsTab() {
 
                           {/* Minimalist Progress track */}
                           <div className="space-y-1">
-                            <div className="flex justify-between items-center text-[9px] font-mono text-slate-500 uppercase">
+                            <div className={`flex justify-between items-center text-[9px] font-mono uppercase ${isDark ? 'text-slate-500' : 'text-[#64748B]'}`}>
                               <span>Weekly progress</span>
-                              <span className={isFullySucceeded ? "text-emerald-400 font-bold" : ""}>
+                              <span className={isFullySucceeded ? (isDark ? "text-emerald-400 font-bold" : "text-emerald-600 font-bold") : ""}>
                                 {completionRatio}% {isFullySucceeded && "— GOAL HIT!"}
                               </span>
                             </div>
-                            <div className="w-full h-1.5 bg-black/35 rounded-full overflow-hidden border border-white/5">
+                            <div className={`w-full h-1.5 rounded-full overflow-hidden border ${isDark ? 'bg-black/35 border-white/5' : 'bg-[#E2E8F0] border-transparent'}`}>
                               <div 
                                 className={`h-full rounded-full transition-all duration-500 ${
                                   isFullySucceeded 
                                     ? "bg-gradient-to-r from-emerald-500 to-teal-500" 
-                                    : "bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4]"
+                                    : (isDark ? "bg-gradient-to-r from-[#00D4FF] to-[#0DFFD4]" : "bg-gradient-to-r from-[#0891B2] to-[#0284C7]")
                                 }`}
                                 style={{ width: `${completionRatio}%` }}
                               />
@@ -410,17 +466,27 @@ export function GoalsTab() {
                         <div className="flex items-center gap-2 self-stretch md:self-auto justify-between overflow-x-auto py-1">
                           {weekDays.map((day) => {
                             const completed = isDateCompleted(goal.id, day.dateStr);
+                            
+                            let btnClass = "";
+                            if (completed) {
+                              btnClass = isDark 
+                                ? "bg-gradient-to-b from-[#00D4FF]/20 to-[#0DFFD4]/20 border-[#00D4FF]/40 text-[#00D4FF] font-bold"
+                                : "bg-[#0891B2] border-[#0E7490] text-white font-bold shadow-sm";
+                            } else if (day.isToday) {
+                              btnClass = isDark 
+                                ? "bg-[#00D4FF]/5 border-[#00D4FF]/30 text-[#00D4FF]"
+                                : "bg-[#F0F9FF] border-[#BAE6FD] text-[#0891B2]";
+                            } else {
+                              btnClass = isDark 
+                                ? "bg-black/20 border-white/5 text-slate-400 hover:border-slate-700"
+                                : "bg-[#F8FAFF] border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]";
+                            }
+
                             return (
                               <button
                                 key={day.dateStr}
                                 onClick={() => toggleGoalDate(goal.id, day.dateStr)}
-                                className={`w-9 h-11 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer border select-none ${
-                                  completed
-                                    ? "bg-gradient-to-b from-[#00D4FF]/20 to-[#0DFFD4]/20 border-[#00D4FF]/40 text-[#00D4FF] font-bold"
-                                    : day.isToday
-                                      ? "bg-[#00D4FF]/5 border-[#00D4FF]/30 text-[#00D4FF]"
-                                      : "bg-black/20 border-white/5 text-slate-400 hover:border-slate-700"
-                                }`}
+                                className={`w-9 h-11 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer border select-none ${btnClass}`}
                                 title={`${day.name} (${day.dateStr}) - Click to log completion`}
                               >
                                 <span className="text-[8px] font-mono leading-none tracking-tight uppercase">
@@ -436,7 +502,11 @@ export function GoalsTab() {
                           {/* Delete Goal */}
                           <button
                             onClick={() => deleteGoal(goal.id)}
-                            className="p-2 text-slate-600 hover:text-red-400 rounded-lg hover:bg-white/5 transition ml-2 cursor-pointer"
+                            className={`p-2 rounded-lg transition ml-2 cursor-pointer ${
+                              isDark 
+                                ? 'text-slate-600 hover:text-red-400 hover:bg-white/5' 
+                                : 'text-[#94A3B8] hover:text-red-500 hover:bg-red-50'
+                            }`}
                             title="Delete Goal"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -455,24 +525,32 @@ export function GoalsTab() {
 
         {/* RIGHT COLUMN: Gemini Consistency Score & Insights (Cols 4) */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-gradient-to-b from-[#0D1425]/90 to-[#0A0E1A]/85 border border-white/5 p-6 rounded-3xl relative overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+          <div className={`border p-6 rounded-3xl relative overflow-hidden ${
+            isDark 
+              ? 'bg-gradient-to-b from-[#0D1425]/90 to-[#0A0E1A]/85 border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.15)]' 
+              : 'bg-white border-[#E2E8F0] shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
+          }`}>
             {/* Background design glow */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-[#00D4FF]/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-[#0DFFD4]/5 rounded-full blur-2xl pointer-events-none" />
+            {isDark && (
+              <>
+                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-[#00D4FF]/5 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-[#0DFFD4]/5 rounded-full blur-2xl pointer-events-none" />
+              </>
+            )}
 
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-4.5 h-4.5 text-[#0DFFD4] animate-pulse" />
-              <h4 className="text-xs font-mono font-bold text-slate-400 tracking-widest uppercase">
+              <Sparkles className={`w-4.5 h-4.5 animate-pulse ${isDark ? 'text-[#0DFFD4]' : 'text-[#0891B2]'}`} />
+              <h4 className={`text-xs font-mono font-bold tracking-widest uppercase ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                 AI COACH INSIGHTS
               </h4>
             </div>
 
             {insightLoading ? (
               <div className="py-12 flex flex-col items-center justify-center space-y-4 text-center">
-                <RefreshCw className="w-8 h-8 text-[#00D4FF] animate-spin" />
+                <RefreshCw className={`w-8 h-8 animate-spin ${isDark ? 'text-[#00D4FF]' : 'text-[#0891B2]'}`} />
                 <div>
-                  <p className="text-xs text-white font-semibold">Analyzing Weekly Habits</p>
-                  <p className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-wider">
+                  <p className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>Analyzing Weekly Habits</p>
+                  <p className={`text-[10px] font-mono mt-1 uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
                     Consulting with AI Coach...
                   </p>
                 </div>
@@ -489,7 +567,7 @@ export function GoalsTab() {
                         cx="72"
                         cy="72"
                         r="62"
-                        stroke="#0D1425"
+                        stroke={isDark ? "#0D1425" : "#F1F5F9"}
                         strokeWidth="10"
                         fill="transparent"
                       />
@@ -497,7 +575,7 @@ export function GoalsTab() {
                         cx="72"
                         cy="72"
                         r="62"
-                        stroke="url(#geminiGradient)"
+                        stroke={isDark ? "url(#geminiGradient)" : "#0891B2"}
                         strokeWidth="10"
                         fill="transparent"
                         strokeDasharray={2 * Math.PI * 62}
@@ -515,10 +593,10 @@ export function GoalsTab() {
                     
                     {/* Centered statistics */}
                     <div className="absolute flex flex-col items-center justify-center leading-none">
-                      <span className="text-3xl font-mono font-black text-white">
+                      <span className={`text-3xl font-mono font-black ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
                         {weeklyConsistencyScore}%
                       </span>
-                      <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest mt-1.5">
+                      <span className={`text-[9px] font-mono uppercase tracking-widest mt-1.5 ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                         CONSISTENCY
                       </span>
                     </div>
@@ -528,10 +606,10 @@ export function GoalsTab() {
                   <div className="mt-4">
                     <span className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest font-black rounded-lg border ${
                       weeklyConsistencyScore >= 80
-                        ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20"
+                        ? (isDark ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-200")
                         : weeklyConsistencyScore >= 50
-                          ? "bg-orange-500/10 text-orange-450 border-orange-500/20"
-                          : "bg-red-500/10 text-red-450 border-red-500/20"
+                          ? (isDark ? "bg-orange-500/10 text-orange-450 border-orange-500/20" : "bg-orange-50 text-orange-600 border-orange-200")
+                          : (isDark ? "bg-red-500/10 text-red-450 border-red-500/20" : "bg-red-50 text-red-600 border-red-200")
                     }`}>
                       {weeklyConsistencyScore >= 80 
                         ? "OPTIMIZED STRATEGY" 
@@ -543,11 +621,13 @@ export function GoalsTab() {
                 </div>
 
                 {/* Cognitive Insight Box */}
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 relative">
-                  <span className="absolute -top-2 left-4 px-2 bg-[#0C152C] text-[8.5px] font-mono text-[#0DFFD4] font-black uppercase tracking-widest">
+                <div className={`border rounded-2xl p-4 relative ${isDark ? 'bg-white/5 border-white/5' : 'bg-[#F8FAFF] border-[#BAE6FD]'}`}>
+                  <span className={`absolute -top-2 left-4 px-2 text-[8.5px] font-mono font-black uppercase tracking-widest ${
+                    isDark ? 'bg-[#0C152C] text-[#0DFFD4]' : 'bg-white text-[#0891B2]'
+                  }`}>
                     Gemini Insight
                   </span>
-                  <p className="text-xs text-slate-300 font-sans leading-relaxed mt-1">
+                  <p className={`text-xs font-sans leading-relaxed mt-1 ${isDark ? 'text-slate-300' : 'text-[#475569]'}`}>
                     {weeklyInsight}
                   </p>
                 </div>
@@ -555,7 +635,11 @@ export function GoalsTab() {
                 {/* Audit trigger */}
                 <button
                   onClick={refreshAIInsight}
-                  className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 hover:border-white/20 transition rounded-xl flex items-center justify-center gap-2 text-xs font-mono font-bold cursor-pointer"
+                  className={`w-full py-2.5 transition rounded-xl flex items-center justify-center gap-2 text-xs font-mono font-bold cursor-pointer border ${
+                    isDark 
+                      ? 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10 hover:border-white/20' 
+                      : 'bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0891B2] border-[#E2E8F0] hover:border-[#CBD5E1]'
+                  }`}
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   RE-AUDIT ROUTINES
@@ -564,10 +648,10 @@ export function GoalsTab() {
               </div>
             ) : (
               <div className="py-10 text-center space-y-4">
-                <HelpCircle className="w-10 h-10 text-slate-650 mx-auto" />
+                <HelpCircle className={`w-10 h-10 mx-auto ${isDark ? 'text-slate-650' : 'text-[#94A3B8]'}`} />
                 <div>
-                  <p className="text-xs text-slate-400">No Assessment Loaded</p>
-                  <p className="text-[10px] text-slate-500 font-mono mt-1 uppercase max-w-xs mx-auto leading-relaxed">
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>No Assessment Loaded</p>
+                  <p className={`text-[10px] font-mono mt-1 uppercase max-w-xs mx-auto leading-relaxed ${isDark ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
                     Check off days inside your active routines board to launch consistency advisor telemetry.
                   </p>
                 </div>
@@ -581,3 +665,4 @@ export function GoalsTab() {
     </div>
   );
 }
+

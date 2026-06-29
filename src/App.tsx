@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import { LandingPage } from "./components/LandingPage";
 import { Dashboard } from "./components/Dashboard";
 import { CustomCursor } from "./components/CustomCursor";
@@ -7,27 +8,9 @@ import { SplashScreen } from "./components/SplashScreen";
 
 const AppContent: React.FC = () => {
   const { user, loading, signInWithDemo } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [splash, setSplash] = useState(true);
   const [demoMode, setDemoMode] = useState(() => localStorage.getItem("rapidfocus_is_demo") === "true");
-
-  // Dark/Light theme manager
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    const saved = localStorage.getItem("theme");
-    return (saved === "light" || saved === "dark") ? saved : "dark";
-  });
-
-  React.useEffect(() => {
-    if (theme === "light") {
-      document.body.classList.add("light-theme");
-    } else {
-      document.body.classList.remove("light-theme");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === "light" ? "dark" : "light");
-  };
 
   // Step 1 — Always show splash first
   if (splash) {
@@ -90,9 +73,11 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CustomCursor />
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <CustomCursor />
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

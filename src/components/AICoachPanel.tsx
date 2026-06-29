@@ -4,6 +4,7 @@ import { Send, MessageSquare, Sparkles, AlertCircle, Calendar } from "lucide-rea
 import ReactMarkdown from "react-markdown";
 import { Task, UserProfile } from "../types";
 import { useAuth } from "../hooks/useAuth";
+import { useTheme } from "../hooks/useTheme";
 import { db, handleFirestoreError, OperationType } from "../services/firebase";
 import { collection, addDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 
@@ -124,12 +125,14 @@ export function parseSchedule(content: string): ParsedSchedule | null {
 }
 
 export const ScheduleTimelineView: React.FC<{ schedule: ParsedSchedule }> = ({ schedule }) => {
+  const { isDark } = useTheme();
+  
   const borderColors = {
-    Excited: "border-emerald-500/50 bg-emerald-500/5 text-emerald-400",
-    Good: "border-[#00D4FF]/50 bg-[#00D4FF]/5 text-[#00D4FF]",
-    Neutral: "border-slate-500/30 bg-slate-500/5 text-slate-300",
-    Tired: "border-amber-500/50 bg-amber-500/5 text-amber-400",
-    Anxious: "border-rose-500/50 bg-rose-500/5 text-rose-400"
+    Excited: isDark ? "border-emerald-500/50 bg-emerald-500/5 text-emerald-400" : "border-emerald-300 bg-emerald-50 text-emerald-700",
+    Good: isDark ? "border-[#00D4FF]/50 bg-[#00D4FF]/5 text-[#00D4FF]" : "border-[#BAE6FD] bg-[#F0F9FF] text-[#0891B2]",
+    Neutral: isDark ? "border-slate-500/30 bg-slate-500/5 text-slate-300" : "border-slate-300 bg-slate-50 text-slate-700",
+    Tired: isDark ? "border-amber-500/50 bg-amber-500/5 text-amber-400" : "border-amber-300 bg-amber-50 text-amber-700",
+    Anxious: isDark ? "border-rose-500/50 bg-rose-500/5 text-rose-400" : "border-rose-300 bg-rose-50 text-rose-700"
   };
 
   const moodEmojis = {
@@ -143,47 +146,53 @@ export const ScheduleTimelineView: React.FC<{ schedule: ParsedSchedule }> = ({ s
   return (
     <div className="space-y-4 w-full">
       {schedule.overallTip && (
-        <div className="p-3 bg-[#00D4FF]/10 border border-[#00D4FF]/20 rounded-xl text-xs text-[#00D4FF] leading-relaxed">
+        <div className={`p-3 border rounded-xl text-xs leading-relaxed ${
+          isDark ? 'bg-[#00D4FF]/10 border-[#00D4FF]/20 text-[#00D4FF]' : 'bg-[#F0F9FF] border-[#BAE6FD] text-[#0891B2]'
+        }`}>
           <p className="font-semibold mb-1">💡 Coach Recommendation</p>
           <p className="opacity-95">{schedule.overallTip}</p>
         </div>
       )}
 
-      <div className="relative border-l border-white/10 pl-4 ml-2 space-y-4 text-left">
+      <div className={`relative border-l pl-4 ml-2 space-y-4 text-left ${isDark ? 'border-white/10' : 'border-[#E2E8F0]'}`}>
         {schedule.items.map((item, index) => (
           <div key={index} className="relative">
             <div className={`absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 ${
-              item.mood === "Excited" ? "bg-emerald-400 border-emerald-500" :
-              item.mood === "Good" ? "bg-[#00D4FF] border-[#00D4FF]" :
-              item.mood === "Tired" ? "bg-amber-400 border-amber-500" :
-              item.mood === "Anxious" ? "bg-rose-400 border-rose-500" :
-              "bg-slate-400 border-slate-500"
+              item.mood === "Excited" ? (isDark ? "bg-emerald-400 border-emerald-500" : "bg-emerald-500 border-emerald-600") :
+              item.mood === "Good" ? (isDark ? "bg-[#00D4FF] border-[#00D4FF]" : "bg-[#0891B2] border-[#0891B2]") :
+              item.mood === "Tired" ? (isDark ? "bg-amber-400 border-amber-500" : "bg-amber-500 border-amber-600") :
+              item.mood === "Anxious" ? (isDark ? "bg-rose-400 border-rose-500" : "bg-rose-500 border-rose-600") :
+              (isDark ? "bg-slate-400 border-slate-500" : "bg-slate-500 border-slate-600")
             }`} />
 
             <div className={`p-3 rounded-xl border ${borderColors[item.mood] || borderColors.Neutral} space-y-1.5 shadow-md`}>
               <div className="flex justify-between items-start gap-2">
-                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-wider">
+                <span className={`text-[10px] font-mono uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
                   ⏱️ {item.time}
                 </span>
-                <span className="text-[10px] font-mono font-bold bg-white/5 px-2 py-0.5 rounded border border-white/5 flex items-center gap-1">
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
+                  isDark ? 'bg-white/5 border-white/5' : 'bg-white border-[#E2E8F0]'
+                }`}>
                   <span>{moodEmojis[item.mood]}</span>
                   <span>{item.mood}</span>
                 </span>
               </div>
 
-              <h5 className="text-xs font-bold text-white leading-snug">
+              <h5 className={`text-xs font-bold leading-snug ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
                 {item.taskTitle}
               </h5>
 
               {item.category && (
-                <div className="text-[10px] text-slate-400 flex gap-2">
-                  <span>Category: <strong className="text-slate-300 font-bold">{item.category}</strong></span>
-                  {item.priority && <span>| Priority: <strong className="text-slate-300 font-bold">{item.priority}</strong></span>}
+                <div className={`text-[10px] flex gap-2 ${isDark ? 'text-slate-400' : 'text-[#64748B]'}`}>
+                  <span>Category: <strong className={`font-bold ${isDark ? 'text-slate-300' : 'text-[#475569]'}`}>{item.category}</strong></span>
+                  {item.priority && <span>| Priority: <strong className={`font-bold ${isDark ? 'text-slate-300' : 'text-[#475569]'}`}>{item.priority}</strong></span>}
                 </div>
               )}
 
               {item.tip && (
-                <p className="text-[11px] text-slate-300 leading-relaxed italic border-t border-white/5 pt-1.5 mt-1.5">
+                <p className={`text-[11px] leading-relaxed italic border-t pt-1.5 mt-1.5 ${
+                  isDark ? 'text-slate-300 border-white/5' : 'text-[#475569] border-[#E2E8F0]'
+                }`}>
                   💡 {item.tip}
                 </p>
               )}
@@ -222,6 +231,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
   startResize
 }) => {
   const { user, isDemoMode } = useAuth();
+  const { isDark } = useTheme();
 
   const defaultGreeting: ChatMessage = {
     id: "greeting",
@@ -318,7 +328,9 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 26, stiffness: 190 }}
-          className="fixed inset-y-0 right-0 w-full bg-[#0E1528] border-l border-white/10 flex flex-col z-50 h-screen shadow-2xl overflow-hidden"
+          className={`fixed inset-y-0 right-0 w-full border-l flex flex-col z-50 h-screen shadow-2xl overflow-hidden ${
+            isDark ? 'bg-[#0E1528] border-white/10' : 'bg-white border-[#E2E8F0]'
+          }`}
           style={{
             width: window.innerWidth < 768 ? '100vw' : `${panelWidth}px`
           }}
@@ -328,21 +340,25 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
             className="hidden md:block absolute left-0 top-0 h-full w-1.5 cursor-ew-resize group z-50"
             onMouseDown={startResize}
           >
-            <div className="h-full w-full group-hover:bg-[#00D4FF]/40 transition-colors duration-200" />
+            <div className={`h-full w-full transition-colors duration-200 ${isDark ? 'group-hover:bg-[#00D4FF]/40' : 'group-hover:bg-[#0891B2]/20'}`} />
             <div className="absolute top-1/2 left-0 -translate-y-1/2 flex flex-col gap-1 pl-[1px]">
-              <div className="w-1 h-1 bg-gray-600 group-hover:bg-[#00D4FF] rounded-full transition-colors" />
-              <div className="w-1 h-1 bg-gray-600 group-hover:bg-[#00D4FF] rounded-full transition-colors" />
-              <div className="w-1 h-1 bg-gray-600 group-hover:bg-[#00D4FF] rounded-full transition-colors" />
+              <div className={`w-1 h-1 rounded-full transition-colors ${isDark ? 'bg-gray-600 group-hover:bg-[#00D4FF]' : 'bg-slate-300 group-hover:bg-[#0891B2]'}`} />
+              <div className={`w-1 h-1 rounded-full transition-colors ${isDark ? 'bg-gray-600 group-hover:bg-[#00D4FF]' : 'bg-slate-300 group-hover:bg-[#0891B2]'}`} />
+              <div className={`w-1 h-1 rounded-full transition-colors ${isDark ? 'bg-gray-600 group-hover:bg-[#00D4FF]' : 'bg-slate-300 group-hover:bg-[#0891B2]'}`} />
             </div>
           </div>
 
           {/* Top Panel Brand Bar */}
-          <div className="p-4 border-b border-white/5 bg-[#0D1425] flex items-center justify-between">
+          <div className={`p-4 border-b flex items-center justify-between ${
+            isDark ? 'bg-[#0D1425] border-white/5' : 'bg-[#F8FAFF] border-[#E2E8F0]'
+          }`}>
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#00D4FF] animate-pulse" />
+              <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${isDark ? 'bg-[#00D4FF]' : 'bg-[#0891B2]'}`} />
               <div className="flex items-center gap-1">
-                <h4 className="text-xs font-black text-white font-mono tracking-widest uppercase">AI Coach</h4>
-                <span className="text-[9px] bg-emerald-500/15 text-emerald-400 font-mono border border-emerald-500/20 px-1 py-0.5 rounded uppercase font-semibold">Active</span>
+                <h4 className={`text-xs font-black font-mono tracking-widest uppercase ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>AI Coach</h4>
+                <span className={`text-[9px] font-mono border px-1 py-0.5 rounded uppercase font-semibold ${
+                  isDark ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                }`}>Active</span>
               </div>
             </div>
             
@@ -350,7 +366,9 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setShowClearConfirm(true)}
-                className="flex items-center gap-1 px-2 py-1 border border-red-500/50 hover:bg-red-500 hover:text-white text-red-400 rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all duration-200 hover:-translate-y-0.5 shadow-sm cursor-pointer"
+                className={`flex items-center gap-1 px-2 py-1 border rounded-lg text-[10px] font-bold tracking-wider uppercase transition-all duration-200 hover:-translate-y-0.5 shadow-sm cursor-pointer ${
+                  isDark ? 'border-red-500/50 hover:bg-red-500 hover:text-white text-red-400' : 'border-red-300 hover:bg-red-500 hover:text-white text-red-600'
+                }`}
                 title="Clear Chat Conversation"
               >
                 <span>🗑️</span>
@@ -359,7 +377,9 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
 
               <button 
                 onClick={onClose}
-                className="text-slate-400 hover:text-white transition w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/5 cursor-pointer"
+                className={`transition w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer ${
+                  isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100'
+                }`}
                 title="Close Panel"
               >
                 ✕
@@ -368,9 +388,11 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
           </div>
 
           {/* Quick Stats Banner inside Chat */}
-          <div className="px-4 py-2.5 bg-[#080D1A]/60 border-b border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
-            <span className="flex items-center gap-1.5 font-semibold text-[#00D4FF]/80">
-              <Sparkles className="w-3.5 h-3.5 text-[#0DFFD4]" /> FOCUS METRICS
+          <div className={`px-4 py-2.5 border-b flex items-center justify-between text-[11px] font-mono ${
+            isDark ? 'bg-[#080D1A]/60 border-white/5 text-slate-400' : 'bg-[#F8FAFF] border-[#E2E8F0] text-[#64748B]'
+          }`}>
+            <span className={`flex items-center gap-1.5 font-semibold ${isDark ? 'text-[#00D4FF]/80' : 'text-[#0891B2]/80'}`}>
+              <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-[#0DFFD4]' : 'text-[#0891B2]'}`} /> FOCUS METRICS
             </span>
             <span>{tasks.filter(t => !t.completed).length} Tasks Pending</span>
           </div>
@@ -392,8 +414,8 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
                     <div
                       className={`p-3 rounded-2xl text-xs max-w-[85%] leading-relaxed ${
                         isUser
-                           ? "bg-[#00D4FF]/10 text-white border border-[#00D4FF]/20 rounded-tr-none"
-                           : "bg-white/5 border border-white/5 text-slate-200 rounded-tl-none font-sans"
+                           ? (isDark ? "bg-[#00D4FF]/10 text-white border border-[#00D4FF]/20 rounded-tr-none" : "bg-[#F0F9FF] text-[#0F172A] border border-[#BAE6FD] rounded-tr-none")
+                           : (isDark ? "bg-white/5 border border-white/5 text-slate-200 rounded-tl-none font-sans" : "bg-white border border-[#E2E8F0] text-[#475569] rounded-tl-none font-sans shadow-sm")
                       }`}
                     >
                       {isUser ? (
@@ -412,9 +434,9 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
                     </div>
                     
                     {/* Subtle Timestamp */}
-                    <span className={`text-[9px] text-slate-500 mt-1 font-mono w-[85%] px-1 ${
+                    <span className={`text-[9px] mt-1 font-mono w-[85%] px-1 ${
                       isUser ? "text-left" : "text-right"
-                    }`}>
+                    } ${isDark ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
                       {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </motion.div>
@@ -425,12 +447,14 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
             {/* Glowing Typing Indicator dot animation */}
             {isGenerating && (
               <div className="flex flex-col items-start">
-                <div className="bg-white/5 border border-white/5 p-3 rounded-2xl rounded-tl-none flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] animate-bounce [animation-delay:-0.3s]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#0DFFD4] animate-bounce [animation-delay:-0.15s]" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] animate-bounce" />
+                <div className={`p-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 border ${
+                  isDark ? 'bg-white/5 border-white/5' : 'bg-white border-[#E2E8F0] shadow-sm'
+                }`}>
+                  <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.3s] ${isDark ? 'bg-[#00D4FF]' : 'bg-[#0891B2]'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:-0.15s] ${isDark ? 'bg-[#0DFFD4]' : 'bg-teal-500'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full animate-bounce ${isDark ? 'bg-[#00D4FF]' : 'bg-[#0891B2]'}`} />
                 </div>
-                <span className="text-[9px] text-slate-500 font-mono uppercase mt-1 pl-1">
+                <span className={`text-[9px] font-mono uppercase mt-1 pl-1 ${isDark ? 'text-slate-500' : 'text-[#94A3B8]'}`}>
                   Drafting schedule...
                 </span>
               </div>
@@ -441,16 +465,22 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
 
           {/* Interactive Trigger Suggestions */}
           {displayMessages.length === 1 && !isGenerating && (
-            <div className="p-3 bg-white/[0.02] border-t border-white/5 flex gap-2 overflow-x-auto scrollbar-none flex-shrink-0">
+            <div className={`p-3 border-t flex gap-2 overflow-x-auto scrollbar-none flex-shrink-0 ${
+              isDark ? 'bg-white/[0.02] border-white/5' : 'bg-[#F8FAFF] border-[#E2E8F0]'
+            }`}>
               <button
                 onClick={() => setInputText("Break down my highest priority task into smaller actionable steps.")}
-                className="flex-shrink-0 px-2.5 py-1.5 bg-slate-900 border border-white/5 rounded-xl text-[10px] text-slate-300 hover:text-[#00D4FF] hover:border-[#00D4FF]/30 transition cursor-pointer font-mono"
+                className={`flex-shrink-0 px-2.5 py-1.5 border rounded-xl text-[10px] transition cursor-pointer font-mono ${
+                  isDark ? 'bg-slate-900 border-white/5 text-slate-300 hover:text-[#00D4FF] hover:border-[#00D4FF]/30' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:text-[#0891B2] hover:border-[#0891B2]/30 hover:bg-[#F0F9FF]'
+                }`}
               >
                 ⚡ Breakdown Priority Task
               </button>
               <button
                 onClick={() => setInputText("How should I budget my work blocks for today? Suggest a Pomodoro schedule.")}
-                className="flex-shrink-0 px-2.5 py-1.5 bg-slate-900 border border-white/5 rounded-xl text-[10px] text-slate-300 hover:text-[#00D4FF] hover:border-[#00D4FF]/30 transition cursor-pointer font-mono"
+                className={`flex-shrink-0 px-2.5 py-1.5 border rounded-xl text-[10px] transition cursor-pointer font-mono ${
+                  isDark ? 'bg-slate-900 border-white/5 text-slate-300 hover:text-[#00D4FF] hover:border-[#00D4FF]/30' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:text-[#0891B2] hover:border-[#0891B2]/30 hover:bg-[#F0F9FF]'
+                }`}
               >
                 🕐 Daily Focus Schedule
               </button>
@@ -460,7 +490,7 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
           {/* Bottom Chat Input Form */}
           <form 
             onSubmit={handleSendMessage}
-            className="p-4 border-t border-white/5 bg-[#0D1425]/90 flex-shrink-0"
+            className={`p-4 border-t flex-shrink-0 ${isDark ? 'border-white/5 bg-[#0D1425]/90' : 'border-[#E2E8F0] bg-white'}`}
           >
             <div className="relative flex items-center">
               <input
@@ -469,15 +499,19 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
                 onChange={(e) => setInputText(e.target.value)}
                 disabled={isGenerating}
                 placeholder={isGenerating ? "Planning focus strategy..." : "Draft priority breakdown or ask AI..."}
-                className="w-full bg-[#080D1A] border border-white/5 rounded-xl pl-4 pr-11 py-3 text-xs text-white focus:outline-none focus:border-[#00D4FF]/40 placeholder-slate-600 transition"
+                className={`w-full border rounded-xl pl-4 pr-11 py-3 text-xs focus:outline-none transition ${
+                  isDark 
+                    ? 'bg-[#080D1A] border-white/5 text-white focus:border-[#00D4FF]/40 placeholder-slate-600' 
+                    : 'bg-[#F1F5F9] border-[#CBD5E1] text-[#0F172A] focus:border-[#0891B2] placeholder-slate-400'
+                }`}
               />
               <button
                 type="submit"
                 disabled={!inputText.trim() || isGenerating}
                 className={`absolute right-1 w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                   inputText.trim() && !isGenerating
-                    ? "bg-[#00D4FF] text-[#0A0F1E] shadow-md hover:opacity-90"
-                    : "text-slate-600 hover:text-slate-500"
+                    ? (isDark ? "bg-[#00D4FF] text-[#0A0F1E] shadow-md hover:opacity-90" : "bg-[#0891B2] text-white shadow-md hover:opacity-90")
+                    : (isDark ? "text-slate-600 hover:text-slate-500" : "text-slate-400 hover:text-slate-500")
                 }`}
               >
                 <Send className="w-3.5 h-3.5" />
@@ -488,18 +522,20 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
           {/* Clear Confirmation Dialog overlay */}
           <AnimatePresence>
             {showClearConfirm && (
-              <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className={`absolute inset-0 backdrop-blur-sm z-50 flex items-center justify-center p-4 ${isDark ? 'bg-black/75' : 'bg-slate-900/40'}`}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#0D1425] border border-white/10 rounded-2xl p-5 w-full max-w-[280px] text-center space-y-4 shadow-2xl"
+                  className={`border rounded-2xl p-5 w-full max-w-[280px] text-center space-y-4 shadow-2xl ${
+                    isDark ? 'bg-[#0D1425] border-white/10' : 'bg-white border-[#E2E8F0]'
+                  }`}
                 >
                   <div className="text-xl">🗑️</div>
-                  <h5 className="text-sm font-bold text-white leading-snug">
+                  <h5 className={`text-sm font-bold leading-snug ${isDark ? 'text-white' : 'text-[#0F172A]'}`}>
                     Clear this conversation?
                   </h5>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-[#475569]'}`}>
                     This will delete all messages in this chat. Your tasks and data are NOT affected.
                   </p>
                   <div className="flex flex-col gap-2 pt-1">
@@ -516,7 +552,9 @@ export const AICoachPanel: React.FC<AICoachPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setShowClearConfirm(false)}
-                      className="w-full py-2 border border-slate-700 hover:border-slate-600 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"
+                      className={`w-full py-2 border font-bold text-xs rounded-xl transition cursor-pointer ${
+                        isDark ? 'border-slate-700 hover:border-slate-600 text-slate-300' : 'border-[#E2E8F0] hover:bg-slate-50 text-[#64748B]'
+                      }`}
                     >
                       Cancel
                     </button>
