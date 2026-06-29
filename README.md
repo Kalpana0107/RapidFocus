@@ -39,6 +39,8 @@ Unlike traditional to-do apps that just remind you, RapidFocus **proactively hel
 | **Daily Briefing** | AI scans your tasks every morning and gives you a 3-bullet personalized briefing |
 | **AI Scheduling Assistant** | Chat with your AI coach about tasks, time blocks, and productivity tips |
 | **Mood-Based Scheduling** | Tell AI how you feel about each task → it schedules your day around your energy |
+| **Resizable Coach Panel** | Drag the left border to resize the AI Coach panel on desktop. Your custom width persists using `localStorage`! |
+| **Ergonomic Mobile Layout** | The AI Coach transitions into a gorgeous bottom-drawer overlay on mobile screens |
 
 ### ⏱️ Focus Timer
 - **Stopwatch Mode** — track how long you spend on any task
@@ -267,18 +269,12 @@ User sets 2 hour timer for assignment
 | **Deployed** | Google Cloud Run |
 
 ---
-## 💙 Special Thanks
-
-We would like to acknowledge the following tools and communities that contributed to the development of this project:
-
-- **Google AI Studio** for access to the Gemini 1.5 Flash Vision model.
-- **Firebase** for handling authentication and cloud-based data storage.
-- **Coding Ninjas** in collaboration with **Google for Developers** for providing the Vibe2Ship Hackathon platform
 
 ## 👩💻 Built By
 
 **Kalpana Naikodi**
-
+- 🎓 B.Tech AI & Data Science — VESIT Mumbai (2025-2029)
+- 💼 Full-stack developer | AI enthusiast
 - 🐙 GitHub: [@Kalpana0107](https://github.com/Kalpana0107)
 
 ---
