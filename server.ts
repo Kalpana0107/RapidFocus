@@ -4,6 +4,14 @@ import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+});
+
 dotenv.config();
 
 // Initialize modern Google GenAI Client with appropriate User-Agent
@@ -18,11 +26,9 @@ const ai = new GoogleGenAI({
 
 // Resilient helper to handle temporary model high-demand (503) or quota (429) by falling back automatically
 const MODELS = [
-  "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-2.0-flash",
   "gemini-2.5-flash",
-  "gemini-3.0-flash"
+  "gemini-1.5-flash",
+  "gemini-2.0-flash",
 ];
 
 async function generateContentWithFallback(options: {
@@ -234,32 +240,10 @@ Remember:
       const parsed = JSON.parse(text);
       res.json(parsed);
     } catch (error: any) {
-      console.error("Schedule error:", error);
-      
-      // Resilient local fallback in case of rate limit, timeout, or missing API key
-      const { tasks = [], moods = {}, freeTime } = req.body;
-      const parsedFreeTime = freeTime || "9:00 AM - 12:00 PM";
-      const taskList = tasks.map((t: any) => ({
-        ...t,
-        mood: moods[t.id] || "Neutral"
-      }));
-      
-      const generatedItems = taskList.map((t: any, index: number) => {
-        const title = t.title || "Focus block";
-        const mood = moods[t.id] || "Neutral";
-        return {
-          time: index === 0 ? "9:00 AM - 10:30 AM" : "10:40 AM - 11:30 AM",
-          taskTitle: title,
-          mood: mood,
-          duration: index === 0 ? "90 mins" : "50 mins",
-          tip: `Keep focus. Calibrated for your ${mood.toLowerCase()} mood today.`
-        };
-      });
-
-      res.json({
-        schedule: generatedItems,
-        overallTip: "Maintain steady momentum and be sure to take short deep-breathing breaks!",
-        totalFocusTime: "2 hours 20 mins"
+      console.error('Schedule error:', error.message || error);
+      res.status(200).json({
+        schedule: [],
+        overallTip: 'Unable to generate schedule right now. Please try again.'
       });
     }
   });
@@ -361,19 +345,8 @@ Return your response inside the requested JSON Schema format. Ensure your wordin
       const result = JSON.parse(bodyText);
       res.json(result);
     } catch (err: any) {
-      console.warn("Warning running task prioritization (using local fallback instead):", err.message || err);
-      let fallbackScore = 5;
-      let finalPriority = req.body.priority || "Medium";
-      if (req.body.priority === "Critical") fallbackScore = 9;
-      else if (req.body.priority === "High") fallbackScore = 7;
-      else if (req.body.priority === "Low") fallbackScore = 3;
-
-      res.json({
-        aiPriorityScore: fallbackScore,
-        priority: finalPriority,
-        aiReasoning: "Urgency metrics calculated via local cognitive fallback due to Gemini high-demand. Perfect for offline usage.",
-        suggestedTimeBlock: "Today, 3:00 PM - 4:30 PM"
-      });
+      console.error('Prioritize error:', err.message || err);
+      res.status(200).json([]);
     }
   });
 
@@ -629,39 +602,11 @@ Provide your response strictly in the requested JSON structure.`;
       const result = JSON.parse(bodyText);
       res.json(result);
     } catch (err: any) {
-      console.warn("Warning running daily briefing generation (using local fallback instead):", err.message || err);
-      const { tasks = [] } = req.body;
-      const pendingTasks = tasks.filter((t: any) => !t.completed);
-      const criticalCount = pendingTasks.filter((t: any) => t.priority === "Critical").length;
-      const highCount = pendingTasks.filter((t: any) => t.priority === "High").length;
-      const overdueTasks = pendingTasks.filter((t: any) => t.deadline && new Date(t.deadline).getTime() < new Date().getTime());
-
-      let headline = "All Clear for Today ✓";
-      let points: string[] = [];
-
-      if (overdueTasks.length > 0) {
-        headline = "OVERDUE ALERTS";
-        points.push(`You have ${overdueTasks.length} task(s) currently past their deadline. Focus on resolving these immediately.`);
-      } else if (criticalCount > 0) {
-        headline = "Stay Alert 🔔";
-        points.push(`You have ${criticalCount} critical task(s) on your radar. Give them prime focus today.`);
-      } else if (highCount > 0) {
-        headline = "STEADY MOMENTUM";
-        points.push(`Workspace looks stable, but you have ${highCount} high value task(s) to chip away at.`);
-      } else {
-        headline = "RELAX & PLAN";
-        points.push("All quiet on the deadline front! Use today for future planning or exploration.");
-      }
-
-      if (pendingTasks.length > 0) {
-        const topPriority = pendingTasks[0];
-        points.push(`Your highest priority object of interest is "${topPriority.title}" (${topPriority.category || "General"}).`);
-        points.push(`We recommend breaking goals into 30-minute block cycles to prevent fatigue.`);
-      } else {
-        points.push("Click '+ ADD NEW TASK' to add your first task and get started! 🚀");
-      }
-
-      res.json({ headline, points });
+      console.error('Briefing error:', err.message || err);
+      res.status(200).json({
+        headline: '✅ All Clear for Today',
+        points: ['Add tasks to get personalized insights!']
+      });
     }
   });
 
@@ -1043,24 +988,10 @@ When referring to their tasks, speak about them accurately and constructively. E
       const replyText = modelResponse.text?.trim() || "I am processing your schedule block right now. Let me know how I can assist.";
       res.json({ text: replyText });
     } catch (err: any) {
-      console.warn("Warning in chat endpoint (using local chatbot fallback):", err.message || err);
-      const { messages, tasks = [], userName } = req.body;
-      const lastUserMessage = (messages && messages.length > 0) 
-        ? messages[messages.length - 1].content.toLowerCase() 
-        : "";
-      
-      let reply = "";
-      if (lastUserMessage.includes("hello") || lastUserMessage.includes("hi")) {
-        reply = `Hello, ${userName || "friend"}! I'm RapidFocus, your adaptive productivity companion. I'm ready to help you plan your day. What should we tackle first?`;
-      } else if (lastUserMessage.includes("task") || lastUserMessage.includes("todo") || lastUserMessage.includes("list")) {
-        const pending = tasks.filter((t: any) => !t.completed).length;
-        reply = `You have ${pending} pending tasks active in your roster. Let's pick one of your high-urgency or due-soon items and schedule a block for it today!`;
-      } else if (lastUserMessage.includes("schedule") || lastUserMessage.includes("plan") || lastUserMessage.includes("today")) {
-        reply = `Let's make a crisp plan for today! Direct your focus towards any pending items on your dashboard. I suggest breaking down your largest task into 3 quick steps and doing a 45-minute focus burst.`;
-      } else {
-        reply = `I am processing your scheduling request right now (Gemini engine is temporarily experiencing high demand, running in local adaptive mode). Focus on completing high priority items first!`;
-      }
-      res.json({ text: reply });
+      console.error('Chat error:', err.message || err);
+      res.status(200).json({ 
+        text: "I'm having trouble connecting right now. Please try again in a moment!" 
+      });
     }
   });
 
@@ -1078,7 +1009,16 @@ When referring to their tasks, speak about them accurately and constructively. E
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
- 
+
+  // Global Error Handler
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error('Global error:', err);
+    res.status(500).json({ 
+      error: 'Something went wrong',
+      message: err.message 
+    });
+  });
+
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 RapidFocus Server booting on http://0.0.0.0:${PORT}`);
   });

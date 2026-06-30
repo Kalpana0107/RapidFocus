@@ -61,6 +61,7 @@ export const TaskDashboard: React.FC = () => {
   const [briefing, setBriefing] = useState<{ headline: string; points: string[] } | null>(null);
   const [briefingLoading, setBriefingLoading] = useState(false);
   const [isBriefingDismissed, setIsBriefingDismissed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Helper to hash current task state to verify if content/structure changed
   const getTasksStateHash = (tasksList: Task[]) => {
@@ -125,6 +126,10 @@ export const TaskDashboard: React.FC = () => {
         }
       } catch (err) {
         console.error("AI Daily Briefing gathering failed:", err);
+        setBriefing({
+          headline: '✅ All Clear for Today',
+          points: ['Add tasks to get personalized insights!']
+        });
       } finally {
         setBriefingLoading(false);
       }
@@ -163,6 +168,10 @@ export const TaskDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error("Failed to re-fetch briefing:", err);
+      setBriefing({
+        headline: '✅ All Clear for Today',
+        points: ['Add tasks to get personalized insights!']
+      });
     } finally {
       setBriefingLoading(false);
     }
@@ -337,6 +346,14 @@ export const TaskDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4 text-center">
+          <p className="text-red-400 text-sm">
+            ⚠️ Something went wrong loading your data. Refreshing...
+          </p>
+        </div>
+      )}
+      
       {/* Dynamic Header Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-1">
