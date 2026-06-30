@@ -27,6 +27,8 @@ Unlike traditional to-do apps that just remind you, RapidFocus **proactively hel
 ## 🌐 Live App
 
 👉 **[https://rapidfocus-564585755298.asia-southeast1.run.app](https://rapidfocus-564585755298.asia-southeast1.run.app)**
+<br>
+👉 **[https://rapid-focus.vercel.app/](https://rapid-focus.vercel.app/)**
 
 ---
 
